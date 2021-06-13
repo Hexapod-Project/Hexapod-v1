@@ -1,0 +1,7 @@
+{
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega",
+    "sketch": "Main.cpp",
+    "port": "/dev/ttyUSB0",
+    "output": "output"
+}

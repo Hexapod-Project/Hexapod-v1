@@ -1,0 +1,82 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/hardware/arduino/avr/cores/arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/hardware/arduino/avr/variants/mega"
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
+    "Include": "Servo.h",
+    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src"
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Datatypes.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Hexapod.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Joint.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Leg.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Node.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/avr/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/mbed/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/megaavr/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/nrf52/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/sam/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/samd/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/stm32f4/Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
