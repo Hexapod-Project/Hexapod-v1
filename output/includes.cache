@@ -25,12 +25,22 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Hexapod.cpp",
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Gait.cpp",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Joint.cpp",
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/GaitGroup.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/GaitManager.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Hexapod.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -40,7 +50,7 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Node.cpp",
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Tools.cpp",
     "Include": "",
     "Includepath": null
   },

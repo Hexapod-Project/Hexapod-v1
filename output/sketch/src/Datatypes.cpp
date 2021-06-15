@@ -13,6 +13,16 @@ float Vec2::magnitude()
     return sqrt(mX * mX + mY * mY);
 }
 
+Vec2 Vec2::operator+=(Vec2 input)
+{
+    return Vec2(mX + input.mX, mY + input.mY);
+}
+
+Vec2 Vec2::operator/(float input)
+{
+    return Vec2(mX/input, mY/input);
+}
+
 //=============================Vec3=============================
 Vec3::Vec3(float x, float y, float z)
 {
@@ -31,9 +41,34 @@ Vec3 Vec3::operator-(Vec3 input)
     return Vec3(mX - input.mX, mY - input.mY, mZ - input.mZ);
 }
 
+Vec3 Vec3::operator-()
+{
+    return Vec3(-mX, -mY, -mZ);
+}
+
+Vec3 Vec3::operator+(Vec3 input)
+{
+    return Vec3(mX + input.mX, mY + input.mY, mZ + input.mZ);
+}
+
+Vec3 Vec3::operator+(float input)
+{
+    return Vec3(mX + input, mY + input, mZ + input);
+}
+
+Vec3 Vec3::operator-=(Vec3 input)
+{
+    return *this - input;
+}
+
 Vec3 Vec3::operator*(float input)
 {
     return Vec3(mX * input, mY * input, mZ * input);
+}
+
+String Vec3::toString()
+{
+    return (String) mX + ", " + mY + ", " + mZ;
 }
 
 //=============================Vec4=============================
@@ -44,7 +79,6 @@ Vec4::Vec4(float x, float y, float z, float w)
     mZ = z;
     mW = w;
 }
-
 
 Vec4::Vec4(Vec3 vec, float w)
 {
@@ -189,11 +223,11 @@ Mat4 Mat4::rotate(float rad, const Vec3 &axis)
 Mat4 Mat4::rotate(const Vec3 &eulerAngles)
 {
     Mat4 res;
-    res.rotate(eulerAngles.mX, Vec3(1, 0, 0));
-    res.rotate(eulerAngles.mY, Vec3(0, 1, 0));
-    res.rotate(eulerAngles.mZ, Vec3(0, 0, 1));
+    res = res.rotate(eulerAngles.mX, Vec3(1, 0, 0));
+    res = res.rotate(eulerAngles.mY, Vec3(0, 1, 0));
+    res = res.rotate(eulerAngles.mZ, Vec3(0, 0, 1));
 
-    return res;
+    return multiply(res);
 }
 
 Mat4 Mat4::inverse()
@@ -205,7 +239,7 @@ Mat4 Mat4::inverse()
     float t2 = (a[0][1] * a[1][2] * a[3][3]) + (a[0][2] * a[1][3] * a[3][1]) + (a[0][3] * a[1][1] * a[3][2]) - (a[0][3] * a[1][2] * a[3][1]) - (a[0][2] * a[1][1] * a[3][3]) - (a[0][1] * a[1][3] * a[3][2]);
     float t3 = (a[0][1] * a[1][2] * a[2][3]) + (a[0][2] * a[1][3] * a[2][1]) + (a[0][3] * a[1][1] * a[2][2]) - (a[0][3] * a[1][2] * a[2][1]) - (a[0][2] * a[1][1] * a[2][3]) - (a[0][1] * a[1][3] * a[2][2]);
 
-    float det = a[0][0] * t0 - a[1][0] * t1 + a[2][0] * t2 - a[0][3] * t3;
+    float det = a[0][0] * t0 - a[1][0] * t1 + a[2][0] * t2 - a[3][0] * t3;
 
     Mat4 res;
 
@@ -240,4 +274,28 @@ Mat4 Mat4::inverse()
 Vec3 Mat4::getPos()
 {
     return Vec3(mMatrix[0][3], mMatrix[1][3], mMatrix[2][3]);
+}
+
+String Mat4::toString()
+{
+    String result = "[";
+
+    for (int row = 0; row < 4; row++)
+    {
+        result += "[";
+        for (int col = 0; col < 4; col++)
+        {
+            result += mMatrix[row][col];
+            if (col < 3)
+                result += ", ";
+        }
+
+        result += "]";
+        if (row < 3)
+            result += "\n";
+    }
+
+    result += "]";
+
+    return result;
 }

@@ -1,117 +1,133 @@
 #include "Leg.h"
 #include <math.h>
+#include <HardwareSerial.h>
+#include "../includes/HexapodConstants.h"
+#include "../includes/Constants.h"
+#include "Tools.h"
 
-Leg::Leg(Vec3 basePos, float baseAngle)
+extern HardwareSerial Serial;
+
+void Leg::setBase(Vec3 pos, float angle, bool isLeftLeg)
 {
-    setBase(basePos, Vec3(0, baseAngle, 0));
+    mStartPos = pos;
 
-    mHipJoint.setBase(Vec3(), Vec3());
-    mFemurJoint.setBase(Vec3(3.8, 0, 0), Vec3(1.57, 0.0, 0.0));
-    mTibiaJoint.setBase(Vec3(4.2, 0, 0), Vec3());
-    mFoot.setBase(Vec3(8.1, 0, 0), Vec3());
+    //90deg is middle of the servos max angle of rotation (which is the default angle of the leg)
+    mStartAngle = angle;
+
+    mBaseMatrix = mBaseMatrix.translate(pos);
 }
 
-void Leg::setup()
+void Leg::setRoot(Mat4 *matrix)
 {
-    setChild(&mHipJoint);
-    mHipJoint.setChild(&mFemurJoint);
-    mFemurJoint.setChild(&mTibiaJoint);
-    mTibiaJoint.setChild(&mFoot);
+    mRootMatrix = matrix;
 }
 
 void Leg::attach(int hipPin, int femurPin, int tibiaPin)
 {
-    mHipJoint.attach(hipPin);
-    mFemurJoint.attach(femurPin);
-    mTibiaJoint.attach(tibiaPin);
+    mHipAngle = START_HIP_ANGLE;
+    mFemurAngle = START_FEMUR_ANGLE;
+    mTibiaAngle = START_TIBIA_ANGLE;
+
+    mHipServo.attach(hipPin);
+    mHipServo.write(mHipAngle);
+
+    mFemurServo.attach(femurPin);
+    mFemurServo.write(mFemurAngle);
+
+    mTibiaServo.attach(tibiaPin);
+    mTibiaServo.write(mTibiaAngle);
 }
 
-void Leg::setFootTargetPos(Vec3 targetPos)
+void Leg::setStartFootPos(Vec3 startPos)
+{
+    mStartFootPos = startPos;
+    mTargetFootPos = startPos;
+}
+
+void Leg::setTargetFootPos(Vec3 targetPos)
 {
     mTargetFootPos = targetPos;
 }
 
-Vec3 Leg::getFootWorldPos()
+Vec3 Leg::getFootPos()
 {
-    return mFoot.getWorldPos();
+    return mFootPos;
 }
 
 void Leg::calculateJointAngles()
 {
-    Mat4 inverseWorldMatrix = mWorldMatrix.inverse();    
+    Mat4 invMatrix = mRootMatrix->multiply(mBaseMatrix).inverse();
+    Vec3 localTargetFootPos = invMatrix.multiply(Vec4(mTargetFootPos, 1));
 
-    Vec3 localTargetFootPos = inverseWorldMatrix.multiply(Vec4(mTargetFootPos, 1));    
+    float hipAngle = atan2(localTargetFootPos.mZ, localTargetFootPos.mX);
 
-    Vec3 localFootPos = mFoot.getLocalPos();    
+    Vec3 localFemurPos = Vec3(cos(hipAngle) * HIP_LENGTH, 0, sin(hipAngle) * HIP_LENGTH);
+    localTargetFootPos = localTargetFootPos - localFemurPos;
 
-    Vec3 footDiff = Vec3((localFootPos.mX - localTargetFootPos.mX), 
-    fabs(localFootPos.mX - localTargetFootPos.mY), fabs(localFootPos.mZ - localTargetFootPos.mZ));
+    float dist = localTargetFootPos.magnitude();
 
-    if(footDiff.mX <= 0.0001 && footDiff.mY <= 0.0001 && footDiff.mZ <= 0.0001)
-        return;
+    if (dist <= 0)
+        dist = 0.00001;
+    else if (dist > LEG_LENGTH)
+        dist = LEG_LENGTH;
+    else if (dist < FEMURTIBIA_DIFF)
+        dist = FEMURTIBIA_DIFF;
 
-    Vec3 localHipPos = mHipJoint.getLocalPos(inverseWorldMatrix);
-    Vec3 localFemurPos = mFemurJoint.getLocalPos(inverseWorldMatrix);
-    Vec3 localTibiaPos = mTibiaJoint.getLocalPos(inverseWorldMatrix);
+    float distSqr = dist * dist;
 
-    Vec3 targetFootPosToHipDiff = localTargetFootPos - localHipPos;
-    float hipAngle = - atan2(targetFootPosToHipDiff.mZ, targetFootPosToHipDiff.mX);
+    float distXZ = sqrt(localTargetFootPos.mX * localTargetFootPos.mX + localTargetFootPos.mZ * localTargetFootPos.mZ);
+    float femurToTargetAngle = atan2(localTargetFootPos.mY, distXZ);
 
-    if(!isnanf(hipAngle))
-        mHipJoint.write(hipAngle);
+    float femurAcosVal = (distSqr + FEMURTIBIASQR_DIFF) / (dist * FEMUR_LENGTH_X2);
+    float femurAngle = acos(femurAcosVal) + femurToTargetAngle + M_PI_2;
 
-    Vec3 verificationDiff = Vec3(fabs(localTargetFootPos.mX) - fabs(localFemurPos.mX), 
-    fabs(localTargetFootPos.mY) - fabs(localFemurPos.mY), fabs(localTargetFootPos.mZ) - fabs(localFemurPos.mZ));
-
-    if(!(verificationDiff.mX < 0 && fabs(verificationDiff.mZ) <= 0.00001 || verificationDiff.mZ < 0 && fabs(verificationDiff.mX) <= 0.00001))
+    float tibiaAngle = 0;
+    if (dist < LEG_LENGTH)
     {
-        Vec3 targetFootPosToFemurDiff = localTargetFootPos - localFemurPos;
-        float dist = targetFootPosToFemurDiff.magnitude();
-
-        if(dist <= 0)
-            dist = 0.00001;
-        else if(dist > 16.1)
-            dist = 16.1;
-        else if(dist < 3.9)
-            dist = 3.9;
-
-        float distSqr = dist * dist;
-
-        float distXZ = sqrt(targetFootPosToFemurDiff.mX * targetFootPosToFemurDiff.mX + targetFootPosToFemurDiff.mZ * targetFootPosToFemurDiff.mZ);
-        float femurToTargetAngle = atan2(targetFootPosToFemurDiff.mY, distXZ);        
-
-        float femurAcosVal = (distSqr - 47.97) / (35.28 * dist);
-        float femurAngle = acos(femurAcosVal) + femurToTargetAngle;
-
-        float tibiaAngle = 0;
-        if(dist < 16.1)
-        {
-            float tibiaAcosVal = (83.25 - distSqr) / 68.04;
-            tibiaAngle = acos(tibiaAcosVal) - M_PI;
-        }
-
-        if(!isnanf(femurAngle))
-            mFemurJoint.write(femurAngle);
-
-        if(!isnanf(tibiaAngle))
-            mTibiaJoint.write(tibiaAngle);
+        float tibiaAcosVal = (FEMURTIBIASQR_TOTAL - distSqr) / FEMURTIBIA_PRODUCT_X2;
+        tibiaAngle = M_PI - acos(tibiaAcosVal) + TIBIA_ANGLE_OFFSET;
     }
+
+    hipAngle = toPositiveRad(-(mStartAngle - toPositiveRad(hipAngle)) + M_PI_2);
+
+    if (!isnanf(hipAngle))
+        mHipAngle = clampTo360(hipAngle * RADTODEG);
+
+    if (!isnanf(femurAngle))
+        mFemurAngle = clampTo360(femurAngle * RADTODEG);
+
+    if (!isnanf(tibiaAngle))
+        mTibiaAngle = clampTo360(tibiaAngle * RADTODEG);
 }
 
-void Leg::update()
+void Leg::updateServoAngles()
 {
-    calculateJointAngles();
-    
-    updateMatrix();
-    mHipJoint.updateMatrix();
-    mFemurJoint.updateMatrix();
-    mTibiaJoint.updateMatrix();
-    mFoot.updateMatrix();
+    setAngles(mHipAngle, mFemurAngle, mTibiaAngle);
 }
 
-void Leg::test(float hipAngle, float femurAngle, float tibiaAngle)
+void Leg::setAngles(float hipAngle, float femurAngle, float tibiaAngle)
 {
-    mHipJoint.write(hipAngle);
-    mFemurJoint.write(femurAngle);
-    mTibiaJoint.write(tibiaAngle);
+    if(hipAngle > HIP_MAX_ANGLE)
+        hipAngle = HIP_MAX_ANGLE;
+    else if (hipAngle < HIP_MIN_ANGLE)
+        hipAngle = HIP_MIN_ANGLE;
+
+    mHipServo.write(hipAngle);
+    mFemurServo.write(femurAngle);
+    mTibiaServo.write(tibiaAngle);
+}
+
+void Leg::resetFootTargetPos()
+{
+    setTargetFootPos(mStartFootPos);
+}
+
+Vec3 Leg::getTargetFootPos()
+{
+    return mTargetFootPos;
+}
+
+Vec3 Leg::getStartFootPos()
+{
+    return mStartFootPos;
 }
