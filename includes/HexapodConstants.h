@@ -89,7 +89,7 @@ static const uint16_t HIP_MIN_ANGLE = 60;
 static const uint16_t HIP_MAX_ANGLE = 120;
 
 static const uint16_t BASE_STEP_DUR = 1000;
-static const float STEP_HEIGHT = 1;
+static const float STEP_HEIGHT = 2;
 static const float STEP_DIST = 3;
 static const float STEP_DIST_X2 = STEP_DIST * 2;
 

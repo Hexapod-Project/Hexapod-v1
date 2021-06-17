@@ -19,7 +19,7 @@ void setup()
 
 void loop()
 {
-    if (Serial.available())
+    if (Serial.available() > 0)
     {
         input = Serial.read();
 
@@ -41,6 +41,7 @@ void loop()
             hexapod.stopWalk();
             break;
         default:
+            break;
         }
     }
 

@@ -40,6 +40,7 @@ void loop()
             hexapod.stopWalk();
             break;
         default:
+            break;
         }
     }
 

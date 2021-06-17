@@ -26,6 +26,8 @@ private:
 
     uint8_t mLegSeqIdx;
 
+    bool mIsChangeDir = false;
+    float mCurrDir;
     float mCosMoveDir, mSinMoveDir;
 
     MOVESTATE mMoveState = MOVESTATE::STOPPED;

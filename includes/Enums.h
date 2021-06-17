@@ -25,7 +25,8 @@ enum MOVESTATE {
     MOVING,
     STOPSTARTED,
     STOPPING,
-    STOPPED
+    STOPPED,
+    CHANGEDIR
 };
 
 enum MOVETYPE {

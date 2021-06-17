@@ -86,23 +86,27 @@ void Hexapod::update()
 
 void Hexapod::walk()
 {
-    float nomalizedTimelapsed = normalizeTimelapsed(mStepStartTime, BASE_STEP_DUR);
+    float normalizedTimelapsed = normalizeTimelapsed(mStepStartTime, BASE_STEP_DUR);
 
-    if (nomalizedTimelapsed >= 1)
+    if (normalizedTimelapsed >= 1)
     {
         if (mMoveState != MOVESTATE::STOPPING)
         {
             mStepStartTime = millis();
+            normalizedTimelapsed = 0;
 
-            if (mStepStartTime < 0)
-                nomalizedTimelapsed = -1;
-            else
-                nomalizedTimelapsed = 0;
+            if(mMoveState == MOVESTATE::CHANGEDIR)
+            {
+                mCosMoveDir = cos(mCurrDir);
+                mSinMoveDir = sin(mCurrDir);
+            }
 
             if (mMoveState == MOVESTATE::START)
                 mMoveState = MOVESTATE::MOVING;
             else if (mMoveState == MOVESTATE::STOPSTARTED)
                 mMoveState = MOVESTATE::STOPPING;
+            else if (mMoveState == MOVESTATE::CHANGEDIR)
+                mMoveState = MOVESTATE::START;            
 
             mLegSeqIdx++;
             if (mLegSeqIdx > 1)
@@ -111,29 +115,31 @@ void Hexapod::walk()
             Vec3 rootPos = mRootMatrix.getPos();
             mBodyPos.mX = rootPos.mX;
             mBodyPos.mZ = rootPos.mZ;
+
+            if (mIsChangeDir)
+            {
+                mIsChangeDir = false;
+                mMoveState = MOVESTATE::CHANGEDIR;                
+            }
         }
         else
         {
             mMoveState = MOVESTATE::STOPPED;
-            resetBodyPos();
-            resetFootPos();
-
-            updateLegs();
             return;
         }
     }
 
-    if (nomalizedTimelapsed >= 0)
+    if (normalizedTimelapsed >= 0)
     {
-        float footY = sin(M_PI * nomalizedTimelapsed) * STEP_HEIGHT;
+        float footY = sin(M_PI * normalizedTimelapsed) * STEP_HEIGHT;
         float baseStepOffset;
 
-        if (mMoveState == MOVESTATE::MOVING)
-            baseStepOffset = STEP_DIST_X2 * nomalizedTimelapsed - STEP_DIST;
-        else if (mMoveState == MOVESTATE::STOPPING)
-            baseStepOffset = STEP_DIST * nomalizedTimelapsed - STEP_DIST;
+        if (mMoveState == MOVESTATE::START)
+            baseStepOffset = STEP_DIST * normalizedTimelapsed;
+        else if (mMoveState == MOVESTATE::STOPPING || mMoveState == MOVESTATE::CHANGEDIR)
+            baseStepOffset = STEP_DIST * normalizedTimelapsed - STEP_DIST;
         else
-            baseStepOffset = STEP_DIST * nomalizedTimelapsed;
+            baseStepOffset = STEP_DIST_X2 * normalizedTimelapsed - STEP_DIST;
 
         Vec3 offset = Vec3(mCosMoveDir * baseStepOffset + mBodyPos.mX, footY, mSinMoveDir * baseStepOffset + mBodyPos.mZ);
 
@@ -144,9 +150,9 @@ void Hexapod::walk()
             mLegs[idx].setTargetFootPos(newPos);
         }
 
-        if (mMoveState != MOVESTATE::STOPPING)
+        if (mMoveState != MOVESTATE::STOPPING && mMoveState != MOVESTATE::CHANGEDIR)
         {
-            float baseBodyOffset = STEP_DIST * nomalizedTimelapsed;
+            float baseBodyOffset = STEP_DIST * normalizedTimelapsed;
             mRootMatrix = mBaseMatrix.translate(mBodyPos + Vec3(mCosMoveDir * baseBodyOffset, 0, mSinMoveDir * baseBodyOffset));
         }
 
@@ -156,14 +162,20 @@ void Hexapod::walk()
 
 void Hexapod::startWalk(float moveDir)
 {
-    if (mMoveState != MOVESTATE::STOPPED)
-        return;
-
-    mMoveState = MOVESTATE::START;
-    mLegSeqIdx = 0;
-    mStepStartTime = millis();
-    mCosMoveDir = cos(moveDir);
-    mSinMoveDir = sin(moveDir);
+    if (mMoveState == MOVESTATE::STOPPED)
+    {
+        mMoveState = MOVESTATE::START;
+        mLegSeqIdx = 0;
+        mStepStartTime = millis();
+        mCosMoveDir = cos(moveDir);
+        mSinMoveDir = sin(moveDir);
+        mCurrDir = moveDir;
+    }
+    else if (mMoveState == MOVESTATE::MOVING && !compareFloats(mCurrDir, moveDir))
+    {
+        mCurrDir = moveDir;
+        mIsChangeDir = true;
+    }
 }
 
 void Hexapod::stopWalk()
