@@ -53,7 +53,7 @@ static const Vec3 LEG_OFFSET_FRONTRIGHT = Vec3(4.6, LEG_HEIGHT_OFFSET, 8.2);
 static const Vec3 LEG_OFFSET_MIDRIGHT = Vec3(5.5, LEG_HEIGHT_OFFSET, 0);
 static const Vec3 LEG_OFFSET_BACKRIGHT = Vec3(4.6, LEG_HEIGHT_OFFSET, -8.2);
 static const Vec3 LEG_OFFSET_FRONTLEFT = Vec3(-4.6, LEG_HEIGHT_OFFSET, 8.2);
-static const Vec3 LEG_OFFSET_MIDLEFT = Vec3(-5.5, LEG_HEIGHT_OFFSET + 1, 0);
+static const Vec3 LEG_OFFSET_MIDLEFT = Vec3(-5.5, LEG_HEIGHT_OFFSET, 0);
 static const Vec3 LEG_OFFSET_BACKLEFT = Vec3(-4.6, LEG_HEIGHT_OFFSET, -8.2);
 
 //Directions
@@ -75,7 +75,7 @@ static const uint16_t START_HIP_ANGLE = 90;
 static const uint16_t START_FEMUR_ANGLE = 180;
 static const uint16_t START_TIBIA_ANGLE = 180;
 
-static const float START_FOOT_DIST = 15;
+static const float START_FOOT_DIST = 12;
 
 //cos(LEG_ANGLE) * START_FOOT_DIST, 0, sin(LEG_ANGLE) * START_FOOT_DIST;
 static const Vec3 START_FOOT_POS_FRONTRIGHT = Vec3(cos(LEG_ANGLE_FRONTRIGHT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_FRONTRIGHT) * START_FOOT_DIST);
@@ -88,8 +88,9 @@ static const Vec3 START_FOOT_POS_BACKLEFT = Vec3(cos(LEG_ANGLE_BACKLEFT) * START
 static const uint16_t HIP_MIN_ANGLE = 60;
 static const uint16_t HIP_MAX_ANGLE = 120;
 
-static const uint16_t BASE_STEP_DUR = 5000;
+static const uint16_t BASE_STEP_DUR = 1000;
 static const float STEP_HEIGHT = 1;
-static const float STEP_DIST = 2;
+static const float STEP_DIST = 3;
+static const float STEP_DIST_X2 = STEP_DIST * 2;
 
 #endif

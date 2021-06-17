@@ -61,6 +61,11 @@ Vec3 Vec3::operator-=(Vec3 input)
     return *this - input;
 }
 
+Vec3 Vec3::operator+=(Vec3 input)
+{
+    return *this + input;
+}
+
 Vec3 Vec3::operator*(float input)
 {
     return Vec3(mX * input, mY * input, mZ * input);
@@ -69,6 +74,13 @@ Vec3 Vec3::operator*(float input)
 String Vec3::toString()
 {
     return (String) mX + ", " + mY + ", " + mZ;
+}
+
+void Vec3::operator=(Vec3 input)
+{
+    mX = input.mX;
+    mY = input.mY;
+    mZ = input.mZ;
 }
 
 //=============================Vec4=============================

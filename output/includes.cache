@@ -35,11 +35,6 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/GaitManager.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
     "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/src/Hexapod.cpp",
     "Include": "",
     "Includepath": null

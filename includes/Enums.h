@@ -21,8 +21,11 @@ enum GAITTYPE {
 };
 
 enum MOVESTATE {
-    MOVE,
-    IDLE
+    START,
+    MOVING,
+    STOPSTARTED,
+    STOPPING,
+    STOPPED
 };
 
 enum MOVETYPE {
@@ -33,12 +36,6 @@ enum MOVETYPE {
 enum ROTATEDIR {
     CLOCKWISE = 1,
     COUNTERCW = -1
-};
-
-enum GAITGROUPSTATE {
-    MOVING,
-    STOPPING,
-    STOPPED,
 };
 
 #endif

@@ -5,7 +5,6 @@
 #include "../includes/HexapodConstants.h"
 
 extern HardwareSerial Serial;
-String inputStr;
 
 void Hexapod::setup()
 {
@@ -23,195 +22,151 @@ void Hexapod::setup()
     mLegs[MIDLEFT].attach(35, 36, 37);
     mLegs[BACKLEFT].attach(38, 39, 40);
 
-    mLegs[FRONTRIGHT].setStartFootPos(START_FOOT_POS_FRONTRIGHT);
-    mLegs[MIDRIGHT].setStartFootPos(START_FOOT_POS_MIDRIGHT);
-    mLegs[BACKRIGHT].setStartFootPos(START_FOOT_POS_BACKRIGHT);
-    mLegs[FRONTLEFT].setStartFootPos(START_FOOT_POS_FRONTLEFT);
-    mLegs[MIDLEFT].setStartFootPos(START_FOOT_POS_MIDLEFT);
-    mLegs[BACKLEFT].setStartFootPos(START_FOOT_POS_BACKLEFT);
+    _delay_ms(1000);
+
+    mLegStartPos[FRONTRIGHT] = START_FOOT_POS_FRONTRIGHT;
+    mLegStartPos[MIDRIGHT] = START_FOOT_POS_MIDRIGHT;
+    mLegStartPos[BACKRIGHT] = START_FOOT_POS_BACKRIGHT;
+    mLegStartPos[FRONTLEFT] = START_FOOT_POS_FRONTLEFT;
+    mLegStartPos[MIDLEFT] = START_FOOT_POS_MIDLEFT;
+    mLegStartPos[BACKLEFT] = START_FOOT_POS_BACKLEFT;
 
     mStartBodyPos = Vec3(0, START_POS_LOW, 0);
 
     mBaseMatrix = mBaseMatrix.translate(mStartBodyPos);
-    mRootMatrix = mBaseMatrix;
+    mRootMatrix.set(mBaseMatrix);
 
+    uint8_t legIdx;
     //Calculate the angles first
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
+    for (legIdx = 0; legIdx < LEG_COUNT; legIdx++)
     {
-        mLegs[mLegIdx].setRoot(&mRootMatrix);
-        mLegs[mLegIdx].calculateJointAngles();
+        mLegs[legIdx].setStartFootPos(mLegStartPos[legIdx]);
+        mLegs[legIdx].setRoot(&mRootMatrix);
+        mLegs[legIdx].calculateJointAngles();
     }
 
-    _delay_ms(1000);
-
     //Then update all at once
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-        mLegs[mLegIdx].updateServoAngles();
+    for (legIdx = 0; legIdx < LEG_COUNT; legIdx++)
+        mLegs[legIdx].updateServoAngles();
 
-    mGaitManager = new GaitManager(this);
+    _delay_ms(1000);
 }
 
 void Hexapod::updateLegs()
 {
+    uint8_t legIdx;
+
     //Calculate the angles for all the legs first
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-        mLegs[mLegIdx].calculateJointAngles();
+    for (legIdx = 0; legIdx < LEG_COUNT; legIdx++)
+        mLegs[legIdx].calculateJointAngles();
 
     //Then update all at once
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-        mLegs[mLegIdx].updateServoAngles();
+    for (legIdx = 0; legIdx < LEG_COUNT; legIdx++)
+        mLegs[legIdx].updateServoAngles();
 }
 
-void Hexapod::resetFeetPos()
+void Hexapod::resetFootPos()
 {
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-        mLegs[mLegIdx].resetFootTargetPos();
+    for (uint8_t legIdx = 0; legIdx < LEG_COUNT; legIdx++)
+        mLegs[legIdx].setTargetFootPos(mLegStartPos[legIdx]);
 }
 
 void Hexapod::resetBodyPos()
 {
-    mBodyPos = mStartBodyPos;
-    mRootMatrix = mBaseMatrix.rotate(mBodyRot);
-}
-
-void Hexapod::resetBodyRot()
-{
-    mMoveDir = mStartDir;
-    mTargetDir = mStartDir;
-    mFaceDir = mStartDir;
-    mBodyRot = mStartBodyRot;
-    mRootMatrix = mBaseMatrix.translate(mBodyPos);
+    mBodyPos = Vec3();
+    mBodyRot = Vec3();
+    mRootMatrix.set(mBaseMatrix);
 }
 
 void Hexapod::update()
 {
-    mIsMoving = mGaitManager->isMoving();
-
-    if (mIsMoving)
-    {
-        mGaitManager->runGait();
-
-        if(mMoveType == MOVETYPE::WALK)
-            centerBody();
-
-        stepTowardsTarget();
-    }
-
-    mRootMatrix = mBaseMatrix.translate(mBodyPos).rotate(mBodyRot);
-
-    updateLegs();
+    if (mMoveState != MOVESTATE::STOPPED)
+        walk();
 }
 
-void Hexapod::move(float dir)
+void Hexapod::walk()
 {
-    Serial.println("Move starting...");
+    float nomalizedTimelapsed = normalizeTimelapsed(mStepStartTime, BASE_STEP_DUR);
 
-    if (mGaitManager->isStopping())
-        return;
-    
-    //TODO; Update movetype from serial
-
-    if (!mGaitManager->isMoving() && (mMoveType == MOVETYPE::WALK || mMoveType == MOVETYPE::ROTATE && compareFloats(mFaceDir, dir)))
+    if (nomalizedTimelapsed >= 1)
     {
-        if (!mCrabMode || mMoveType == MOVETYPE::ROTATE)
-            mTargetDir = mFaceDir;
-
-        for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
+        if (mMoveState != MOVESTATE::STOPPING)
         {
-            mStepStartPos[mLegIdx] = mLegs[mLegIdx].getTargetFootPos();
-            mStepOffsetPos[mLegIdx] = Vec3();
-        }
+            mStepStartTime = millis();
 
-        mGaitManager->setWalkDir(dir);
-        mGaitManager->startGait(mGaitType);
-    }
-    else if (!compareFloats(mTargetDir, dir) || mMoveType == MOVETYPE::ROTATE && !compareFloats(mFaceDir, dir))
-        mGaitManager->setWalkDir(dir);
-
-    Serial.println("Move started");
-}
-
-void Hexapod::stop()
-{
-    if (mCrabMode || !mCrabMode && compareFloats(mTargetDir, mFaceDir))
-        mGaitManager->stopGait();
-}
-
-void Hexapod::stepTowardsTarget()
-{
-    for (mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-    {
-        mTimeLapsedRatio = getTimeLapsedRatio(mStepStartTimes[mLegIdx], mGaitManager->getStepDur());
-        if(mTimeLapsedRatio > 1) mTimeLapsedRatio = 1;
-
-        if (mTimeLapsedRatio >= 0)
-        {
-            mStartFootPos = mLegs[mLegIdx].getStartFootPos() + mBodyPos;
-            mTargetFootPos = mLegs[mLegIdx].getTargetFootPos();
-            mCurrStepStartPos = mStepStartPos[mLegIdx];
-            mCurrStepOffset = mStepOffsetPos[mLegIdx];
-            mBodyStepStartPos = mStepBodyStartPos[mLegIdx];
-
-            //TODO: not Crab Mode
-
-            mOffset = mCurrStepOffset * mTimeLapsedRatio;
-
-            if (mMoveType == MOVETYPE::WALK || mMoveType == MOVETYPE::ROTATE && !compareFloats(mTargetDir, mFaceDir))
-                mOffset.mY = sin(mTimeLapsedRatio * M_PI) * STEP_HEIGHT - mCurrStepStartPos.mY * mTimeLapsedRatio;
+            if (mStepStartTime < 0)
+                nomalizedTimelapsed = -1;
             else
-            {
-                mFootDist = mCurrStepOffset.mX * mCurrStepOffset.mX + mCurrStepOffset.mZ + mCurrStepOffset.mZ;
+                nomalizedTimelapsed = 0;
 
-                if (mFootDist > 0.00001)
-                    mOffset.mY = sin(mTimeLapsedRatio * M_PI) * mFootDist - mStepStartPos->mY * mTimeLapsedRatio;
-                else
-                    mGaitManager->stopGaitImmediate();
-            }
+            if (mMoveState == MOVESTATE::START)
+                mMoveState = MOVESTATE::MOVING;
+            else if (mMoveState == MOVESTATE::STOPSTARTED)
+                mMoveState = MOVESTATE::STOPPING;
 
-            mTargetFootPos = mCurrStepStartPos + mOffset;
+            mLegSeqIdx++;
+            if (mLegSeqIdx > 1)
+                mLegSeqIdx = 0;
 
-            mLegs[mLegIdx].setTargetFootPos(mTargetFootPos);
+            Vec3 rootPos = mRootMatrix.getPos();
+            mBodyPos.mX = rootPos.mX;
+            mBodyPos.mZ = rootPos.mZ;
+        }
+        else
+        {
+            mMoveState = MOVESTATE::STOPPED;
+            resetBodyPos();
+            resetFootPos();
+
+            updateLegs();
+            return;
         }
     }
-}
 
-void Hexapod::setNextStep(int footIdx, int startTime, bool isStop)
-{
-    mStartFootPos = mLegs[mLegIdx].getStartFootPos() + mBodyPos;
-    mCurrFootPos = mLegs[mLegIdx].getTargetFootPos();
-
-    mFootDiff = mCurrFootPos - mStartFootPos;
-
-    if (!isStop)
+    if (nomalizedTimelapsed >= 0)
     {
-        mStepOffsetPos[footIdx] = Vec3(cos(mMoveDir) * STEP_DIST - mFootDiff.mX, 0,
-                                       sin(mMoveDir) * STEP_DIST - mFootDiff.mZ);
+        float footY = sin(M_PI * nomalizedTimelapsed) * STEP_HEIGHT;
+        float baseStepOffset;
 
-        mStepStartPos[footIdx] = mCurrFootPos;
-        mStepBodyStartPos[footIdx] = mBodyPos;
-        mStepFootIsStop[footIdx] = isStop;
-        
-        mStepStartTimes[footIdx] = startTime;
+        if (mMoveState == MOVESTATE::MOVING)
+            baseStepOffset = STEP_DIST_X2 * nomalizedTimelapsed - STEP_DIST;
+        else if (mMoveState == MOVESTATE::STOPPING)
+            baseStepOffset = STEP_DIST * nomalizedTimelapsed - STEP_DIST;
+        else
+            baseStepOffset = STEP_DIST * nomalizedTimelapsed;
+
+        Vec3 offset = Vec3(mCosMoveDir * baseStepOffset + mBodyPos.mX, footY, mSinMoveDir * baseStepOffset + mBodyPos.mZ);
+
+        for (int i = 0; i < 3; i++)
+        {
+            int idx = mLegSequence[mLegSeqIdx][i];
+            Vec3 newPos = mLegStartPos[idx] + offset;
+            mLegs[idx].setTargetFootPos(newPos);
+        }
+
+        if (mMoveState != MOVESTATE::STOPPING)
+        {
+            float baseBodyOffset = STEP_DIST * nomalizedTimelapsed;
+            mRootMatrix = mBaseMatrix.translate(mBodyPos + Vec3(mCosMoveDir * baseBodyOffset, 0, mSinMoveDir * baseBodyOffset));
+        }
+
+        updateLegs();
     }
 }
 
-void Hexapod::centerBody()
+void Hexapod::startWalk(float moveDir)
 {
-    Vec2 feetPolygon[LEG_COUNT];
-    for(mLegIdx = 0; mLegIdx < LEG_COUNT; mLegIdx++)
-    {
-        mTargetFootPos = mLegs[mLegIdx].getTargetFootPos();
-        feetPolygon->mX = mTargetFootPos.mX;
-        feetPolygon->mY = mTargetFootPos.mZ;
-    }
+    if (mMoveState != MOVESTATE::STOPPED)
+        return;
 
-    Vec2 centroid = getCentroid(feetPolygon, LEG_COUNT); 
-
-    mBodyPos.mX = centroid.mX;
-    mBodyPos.mZ = centroid.mY;    
+    mMoveState = MOVESTATE::START;
+    mLegSeqIdx = 0;
+    mStepStartTime = millis();
+    mCosMoveDir = cos(moveDir);
+    mSinMoveDir = sin(moveDir);
 }
 
-void Hexapod::changeDir(float walkDir, float grpSize, int startTime)
+void Hexapod::stopWalk()
 {
-
+    mMoveState = MOVESTATE::STOPSTARTED;
 }

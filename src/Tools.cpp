@@ -30,7 +30,7 @@ bool compareFloats(float a, float b, float precision)
     return fabs(a - b) <= precision;
 }
 
-float getTimeLapsedRatio(int startTime, int dur)
+float normalizeTimelapsed(unsigned long startTime, int dur)
 {
     return (float)(millis() - startTime) / dur;
 }

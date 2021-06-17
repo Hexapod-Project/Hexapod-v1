@@ -20,9 +20,9 @@ public:
 class Vec3
 {
 public:
-    float mX;
-    float mY;
-    float mZ;
+    float mX = 0;
+    float mY = 0;
+    float mZ = 0;
 
     Vec3() {};
     Vec3(float x, float y, float z);
@@ -33,6 +33,8 @@ public:
     Vec3 operator-();
     Vec3 operator * (float input);
     Vec3 operator -= (Vec3 input);
+    Vec3 operator += (Vec3 input);
+    void operator = (Vec3 input);
     String toString();
 };
 
@@ -65,7 +67,7 @@ public:
     Mat4 rotate(const Vec3 &eulerAngles);
     Mat4 inverse();
     Vec3 getPos();
-    String toString();
+    String toString();    
 
     //Matrix[Row][Col]
     float mMatrix[4][4];
