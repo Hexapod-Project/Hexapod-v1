@@ -19,6 +19,8 @@ public:
     void updateDirs(float moveDir = -1, float turnDir = -1, float transDir = -1, float rotDir = -1);
     void setMisc(uint8_t miscState);
     void calibrateMode(uint16_t hipAngle = 90, uint16_t femurAngle = 90, uint16_t tibiaAngle = 0);
+    uint8_t getStanceMisc();
+    uint8_t getGaitTypeMisc();
 
 private:
     bool mCalibrateMode = false;
@@ -62,12 +64,13 @@ private:
     float mStepHeight;
     float mBaseStepHeight;
 
+    BTDATA_MISC mStance = BTDATA_MISC::CROUCH;
+
     float mFaceDir = FORWARD, mTargetFaceDir = FORWARD;
+    float mFaceDirDiff;
     float mMoveDir = 0;
     float mCosMoveDir, mSinMoveDir;
     float mTurnDir = 0;
-
-    bool mNaturalWalkMode = true;    
 
     void initLegs();
     void setLegsPos();
@@ -78,7 +81,7 @@ private:
     void setNextStepRot();
     void setNextStep();
     void initStep();
-    void setBodyHeight(float height);
+    void setStance(float height, BTDATA_MISC stance);
     void transRotBody(float transDir, float rotDir);
 };
 

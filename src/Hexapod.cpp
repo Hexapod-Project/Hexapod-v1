@@ -162,12 +162,14 @@ void Hexapod::update()
     }
 }
 
-void Hexapod::setBodyHeight(float height)
+void Hexapod::setStance(float height, BTDATA_MISC stance)
 {
     mBodyPos.mY = height;
     Serial.println(mBodyPos.toString());
     mBodyMatrix = mBaseMatrix.translate(mBodyPos).rotate(mBodyRot);
     mBaseStepHeight = height * BODY_TO_STEP_Y_RATIO;
+
+    mStance = stance;
 
     updateLegs();
 }
@@ -197,16 +199,13 @@ void Hexapod::transRotBody(float transDir, float rotDir)
 void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rotDir)
 {
     if (mMoveState == MOVESTATE::STOPPED)
-        transRotBody(transDir, rotDir);
+        transRotBody(transDir + mFaceDirDiff, rotDir + mFaceDirDiff);
 
     //Walk
     if (moveDir <= -1)
     {
         if (mMoveState == MOVESTATE::MOVING && mStepDistMulti > 0)
         {
-            if (mNaturalWalkMode)
-                mTargetFaceDir = mFaceDir;
-
             if (compareFloats(mTargetFaceDir, mFaceDir))
                 mMoveState = MOVESTATE::STOPSTARTED;
             else
@@ -215,34 +214,25 @@ void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rot
     }
     else
     {
-        if (mStepDistMulti <= 0)
-        {
-            mMoveDir = moveDir;
+        mMoveDir = moveDir + mFaceDirDiff;
 
-            if (!mNaturalWalkMode)
-                calcMoveDir();
+        if (mStepDistMulti <= 0)
+        {            
+            calcMoveDir();
 
             //mStepDistMulti = pos.magnitude();
             mStepDistMulti = 1;
 
-            if (mNaturalWalkMode || compareFloats(mTargetFaceDir, mFaceDir))
+            if (compareFloats(mTargetFaceDir, mFaceDir))
             {
-                if (mNaturalWalkMode)
-                    mTargetFaceDir = toPositiveRad(mMoveDir);
-
                 initStep();
                 setNextStep();
                 setNextStepRot();
             }
         }
         else if (!compareFloats(mMoveDir, moveDir))
-        {
-            mMoveDir = moveDir;
-
-            if (!mNaturalWalkMode)
-                calcMoveDir();
-            else
-                mTargetFaceDir = toPositiveRad(mMoveDir);
+        {            
+            calcMoveDir();
 
             //setNextStep();
             //setNextStepRot();
@@ -250,38 +240,25 @@ void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rot
     }
 
     //Rotate
-    if (!mNaturalWalkMode || mStepDistMulti == 0)
+    mTurnDir = turnDir;
+
+    if (turnDir > -1)
     {
-        mTurnDir = turnDir;
+        mFaceDir = toPositiveRad(mFaceDir);
 
-        if (turnDir > -1)
+        if (mMoveState == MOVESTATE::STOPPED)
         {
-            mFaceDir = toPositiveRad(mFaceDir);
-
-            if (mMoveState == MOVESTATE::STOPPED)
-            {
-                initStep();
-                setNextStep();
-                setNextStepRot();
-            }
-
-            if (mNaturalWalkMode)
-                mMoveDir = mTargetFaceDir;
+            initStep();
+            setNextStep();
+            setNextStepRot();
         }
     }
 }
 
 void Hexapod::calcMoveDir()
-{
-    if (!mNaturalWalkMode)
-    {
-        float faceDirDiff = mFaceDir - M_PI_2;
-        mCosMoveDir = cos(mMoveDir + faceDirDiff);
-        mSinMoveDir = sin(mMoveDir + faceDirDiff);
-    } else {
-        mCosMoveDir = cos(mFaceDir);
-        mSinMoveDir = sin(mFaceDir);
-    }
+{    
+    mCosMoveDir = cos(mMoveDir);
+    mSinMoveDir = sin(mMoveDir);
 }
 
 void Hexapod::initStep()
@@ -295,6 +272,7 @@ void Hexapod::setNextStepRot()
 {
     //Store the values after being rotated
     mFaceDir = clampTo360Rad(toPositiveRad(FORWARD - mBodyRot.mY));
+    mFaceDirDiff = mFaceDir - M_PI_2;
 
     if (mTurnDir > -1)
         mTargetFaceDir = mFaceDir - cos(mTurnDir) * MAXRAD_PERSTEP;
@@ -332,9 +310,6 @@ void Hexapod::setNextStep()
     mLegIndicesSize = currGroup->mLegIndicesSize;
     mStepTimeOffset = currGroup->mStepTimeOffset;
     mStepDuration = currGroup->mStepDuration;
-
-    if (mNaturalWalkMode)    
-        calcMoveDir();    
 
     float baseStepDist = STEP_DIST * mStepDistMulti;
 
@@ -460,21 +435,42 @@ void Hexapod::setMisc(uint8_t miscState)
     case BTDATA_MISC::RIPPLE_GAIT:
         mInputGaitType = GAITTYPE::RIPPLE;
         break;
-    case BTDATA_MISC::AUTOROT_ON:
-        mNaturalWalkMode = true;
-        Serial.println("Natural Walk ON");
-        break;
-    case BTDATA_MISC::AUTOROT_OFF:
-        mNaturalWalkMode = false;
-        Serial.println("Natural Walk OFF");
-        break;
+    // case BTDATA_MISC::AUTOROT_ON:
+    //     mNaturalWalkMode = true;
+    //     Serial.println("Natural Walk ON");
+    //     break;
+    // case BTDATA_MISC::AUTOROT_OFF:
+    //     mNaturalWalkMode = false;
+    //     Serial.println("Natural Walk OFF");
+    //     break;
     case BTDATA_MISC::CROUCH:
-        setBodyHeight(CROUCH_HEIGHT);
+        setStance(CROUCH_HEIGHT, CROUCH);
         break;
     case BTDATA_MISC::RISE:
-        setBodyHeight(RISE_HEIGHT);
+        setStance(RISE_HEIGHT, RISE);
         break;
     default:
         break;
+    }
+}
+
+uint8_t Hexapod::getStanceMisc()
+{
+    return mStance;
+}
+
+uint8_t Hexapod::getGaitTypeMisc()
+{
+    switch (mGaitType)
+    {
+    default:
+    case TRIPOD:
+        return TRIPOD_GAIT;
+    case TRIPLE:
+        return TRIPLE_GAIT;
+    case WAVE:
+        return WAVE_GAIT;
+    case RIPPLE:
+        return RIPPLE_GAIT;
     }
 }

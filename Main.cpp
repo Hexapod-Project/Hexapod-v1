@@ -9,21 +9,23 @@
 #include "esp_bt_device.h"
 #include "esp32-hal-bt.h"
 
-
 extern HardwareSerial Serial;
 Hexapod hexapod;
 
-BluetoothSerial btSerial;
+BluetoothSerial SerialBT;
 
-const uint8_t BYTESIZE = 5;
-byte buffer[BYTESIZE];
+const uint8_t BUFFER_LEN = 5;
+byte buffer[BUFFER_LEN];
+
+const uint8_t REQUEST_SYNC_FLAG = 255;
+const String HEXAPOD_STATES_HEADER = "HS";
 
 void setup()
 {
-    Serial.begin(115200);    
+    Serial.begin(115200);
     initBluetooth();
     //printBluetoothAddr();
-    
+
     hexapod.setup();
 }
 
@@ -32,7 +34,6 @@ void loop()
     checkBtData();
     hexapod.update();
 }
-
 
 bool initBluetooth()
 {
@@ -54,7 +55,7 @@ bool initBluetooth()
         return false;
     }
 
-    btSerial.begin("Hexxo");
+    SerialBT.begin("Hexxo");
     return true;
 }
 
@@ -77,16 +78,23 @@ void printBluetoothAddr()
 
 void checkBtData()
 {
-    if (btSerial.available())
+    if (SerialBT.available())
     {
-        btSerial.readBytes(buffer, BYTESIZE);
-                
-        float moveDir = jyStkAngleToRad(buffer[MOVE_IDX]);                 
-        float turnDir = jyStkAngleToRad(buffer[TURN_IDX]);
-        float transDir = jyStkAngleToRad(buffer[TRANS_IDX]);
-        float rotDir = jyStkAngleToRad(buffer[ROT_IDX]);
-        
-        hexapod.updateDirs(moveDir, turnDir, transDir, rotDir);
-        hexapod.setMisc(buffer[MISC_IDX]);
+        SerialBT.readBytes(buffer, BUFFER_LEN);
+
+        if (buffer[MISC_IDX] != REQUEST_SYNC_FLAG)
+        {
+            float moveDir = jyStkAngleToRad(buffer[MOVE_IDX]);
+            float turnDir = jyStkAngleToRad(buffer[TURN_IDX]);
+            float transDir = jyStkAngleToRad(buffer[TRANS_IDX]);
+            float rotDir = jyStkAngleToRad(buffer[ROT_IDX]);
+
+            hexapod.updateDirs(moveDir, turnDir, transDir, rotDir);
+            hexapod.setMisc(buffer[MISC_IDX]);
+        }
+        else
+            //Send hexapod states
+            SerialBT.print(HEXAPOD_STATES_HEADER + "|" + (String)hexapod.getGaitTypeMisc() +
+                           "|" + (String)hexapod.getStanceMisc() + "\n");
     }
 }
