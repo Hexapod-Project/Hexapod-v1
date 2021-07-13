@@ -217,8 +217,10 @@ void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rot
     {
         if (mStepDistMulti <= 0)
         {
+            mMoveDir = moveDir;
+
             if (!mNaturalWalkMode)
-                setMoveDir(moveDir);
+                calcMoveDir();
 
             //mStepDistMulti = pos.magnitude();
             mStepDistMulti = 1;
@@ -235,8 +237,10 @@ void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rot
         }
         else if (!compareFloats(mMoveDir, moveDir))
         {
+            mMoveDir = moveDir;
+
             if (!mNaturalWalkMode)
-                setMoveDir(moveDir);
+                calcMoveDir();
             else
                 mTargetFaceDir = toPositiveRad(mMoveDir);
 
@@ -248,38 +252,36 @@ void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rot
     //Rotate
     if (!mNaturalWalkMode || mStepDistMulti == 0)
     {
+        mTurnDir = turnDir;
+
         if (turnDir > -1)
         {
-            if (!compareFloats(turnDir, mFaceDir))
+            mFaceDir = toPositiveRad(mFaceDir);
+
+            if (mMoveState == MOVESTATE::STOPPED)
             {
-                mTargetFaceDir = toPositiveRad(turnDir);
-                mFaceDir = toPositiveRad(mFaceDir);
-
-                if (mNaturalWalkMode)
-                    mMoveDir = mTargetFaceDir;
-
-                if (mMoveState == MOVESTATE::STOPPED)
-                {
-                    initStep();
-                    setNextStep();
-                    setNextStepRot();
-                }
+                initStep();
+                setNextStep();
+                setNextStepRot();
             }
-            else if (mMoveState == MOVESTATE::MOVING && mStepDistMulti == 0)
-                mMoveState = MOVESTATE::STOPSTARTED;
+
+            if (mNaturalWalkMode)
+                mMoveDir = mTargetFaceDir;
         }
-        else if (mMoveState == MOVESTATE::MOVING)
-            mTargetFaceDir = mFaceDir + mStepRotAngle;
     }
 }
 
-void Hexapod::setMoveDir(float moveDir)
+void Hexapod::calcMoveDir()
 {
-    mMoveDir = moveDir;
-
-    float faceDirDiff = mFaceDir - M_PI_2;
-    mCosMoveDir = cos(mMoveDir + faceDirDiff);
-    mSinMoveDir = sin(mMoveDir + faceDirDiff);
+    if (!mNaturalWalkMode)
+    {
+        float faceDirDiff = mFaceDir - M_PI_2;
+        mCosMoveDir = cos(mMoveDir + faceDirDiff);
+        mSinMoveDir = sin(mMoveDir + faceDirDiff);
+    } else {
+        mCosMoveDir = cos(mFaceDir);
+        mSinMoveDir = sin(mFaceDir);
+    }
 }
 
 void Hexapod::initStep()
@@ -291,6 +293,12 @@ void Hexapod::initStep()
 
 void Hexapod::setNextStepRot()
 {
+    //Store the values after being rotated
+    mFaceDir = clampTo360Rad(toPositiveRad(FORWARD - mBodyRot.mY));
+
+    if (mTurnDir > -1)
+        mTargetFaceDir = mFaceDir - cos(mTurnDir) * MAXRAD_PERSTEP;
+
     if (compareFloats(mFaceDir, mTargetFaceDir))
     {
         if (mMoveState == MOVESTATE::MOVING && compareFloats(mTargetFaceDir, mFaceDir) && mStepDistMulti == 0)
@@ -298,9 +306,6 @@ void Hexapod::setNextStepRot()
 
         return;
     }
-
-    //Store the values after being rotated
-    mFaceDir = clampTo360Rad(toPositiveRad(FORWARD - mBodyRot.mY));
 
     float diffAngle = getSmallestRad(mTargetFaceDir - mFaceDir);
     mStepRotAngle = fabs(diffAngle) > MAXRAD_PERSTEP ? copysign(MAXRAD_PERSTEP, diffAngle) : diffAngle;
@@ -329,7 +334,7 @@ void Hexapod::setNextStep()
     mStepDuration = currGroup->mStepDuration;
 
     if (mNaturalWalkMode)    
-        setMoveDir(mFaceDir);    
+        calcMoveDir();    
 
     float baseStepDist = STEP_DIST * mStepDistMulti;
 

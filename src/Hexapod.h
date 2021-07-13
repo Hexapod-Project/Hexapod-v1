@@ -65,6 +65,7 @@ private:
     float mFaceDir = FORWARD, mTargetFaceDir = FORWARD;
     float mMoveDir = 0;
     float mCosMoveDir, mSinMoveDir;
+    float mTurnDir = 0;
 
     bool mNaturalWalkMode = true;    
 
@@ -72,7 +73,7 @@ private:
     void setLegsPos();
     void initGaits();
     void updateLegs();    
-    void setMoveDir(float moveDir);
+    void calcMoveDir();
     void walk();
     void setNextStepRot();
     void setNextStep();
