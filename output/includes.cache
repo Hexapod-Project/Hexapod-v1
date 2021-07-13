@@ -2,17 +2,27 @@
   {
     "Sourcefile": null,
     "Include": "",
-    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/hardware/arduino/avr/cores/arduino"
+    "Includepath": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/cores/esp32"
   },
   {
     "Sourcefile": null,
     "Include": "",
-    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/hardware/arduino/avr/variants/mega"
+    "Includepath": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/variants/esp32"
   },
   {
     "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
-    "Include": "Servo.h",
-    "Includepath": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src"
+    "Include": "Adafruit_PWMServoDriver.h",
+    "Includepath": "/home/edwinlee/Arduino/libraries/Adafruit-PWM-Servo-Driver-Library"
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
+    "Include": "Wire.h",
+    "Includepath": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/libraries/Wire/src"
+  },
+  {
+    "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
+    "Include": "BluetoothSerial.h",
+    "Includepath": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/libraries/BluetoothSerial/src"
   },
   {
     "Sourcefile": "/home/edwinlee/Documents/Projects/HexapodRobot/output/sketch/Main.cpp.cpp",
@@ -50,37 +60,17 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/avr/Servo.cpp",
+    "Sourcefile": "/home/edwinlee/Arduino/libraries/Adafruit-PWM-Servo-Driver-Library/Adafruit_PWMServoDriver.cpp",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/mbed/Servo.cpp",
+    "Sourcefile": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/libraries/Wire/src/Wire.cpp",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/megaavr/Servo.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/nrf52/Servo.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/sam/Servo.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/samd/Servo.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "/home/edwinlee/Downloads/arduino-1.8.13-linux64/arduino-1.8.13/libraries/Servo/src/stm32f4/Servo.cpp",
+    "Sourcefile": "/home/edwinlee/.arduino15/packages/esp32/hardware/esp32/1.0.6/libraries/BluetoothSerial/src/BluetoothSerial.cpp",
     "Include": "",
     "Includepath": null
   }

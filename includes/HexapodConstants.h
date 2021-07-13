@@ -5,92 +5,108 @@
 #include "../src/Datatypes.h"
 #include <math.h>
 
-//All distance/length units are in Centimeter(cm)
-static const int LEG_COUNT = 6;
+// //All distance/length units are in Centimeter(cm)
+const int LEG_COUNT = 6;
 
-//Hexapod Dimensions
-static const float BODY_WIDTH = 7;
-static const float BODY_LENGTH = 16.9;
+// //Leg Angles
+const float LEG_ANGLE_FRONTRIGHT = M_PI / 3;
+const float LEG_ANGLE_MIDRIGHT = 0;
+const float LEG_ANGLE_BACKRIGHT = M_PI * 2 - M_PI / 3;
+const float LEG_ANGLE_FRONTLEFT = M_PI * 2 / 3;
+const float LEG_ANGLE_MIDLEFT = M_PI;
+const float LEG_ANGLE_BACKLEFT = M_PI + M_PI / 3;
 
-static const float HIP_DIST_FRONTRIGHT = 9.7;
-static const float HIP_DIST_MIDRIGHT = 5.9;
-static const float HIP_DIST_BACKRIGHT = 9.3;
-static const float HIP_DIST_FRONTLEFT = 9.3;
-static const float HIP_DIST_MIDLEFT = 5.7;
-static const float HIP_DIST_BACKLEFT = 9.3;
+const float AXIS_HEIGHT = 4.0f;
 
-static const float HIP_LENGTH = 3.8;
-static const float FEMUR_LENGTH = 4.2;
-static const float TIBIA_LENGTH = 8.1;
+const float HIP_LENGTH = 5.2;
+const float FEMUR_LENGTH = 4.7;
+const float TIBIA_LENGTH = 8.5;
 
-static const float HIP_LENGTH_SQR = HIP_LENGTH * HIP_LENGTH;
-static const float FEMUR_LENGTH_SQR = FEMUR_LENGTH * FEMUR_LENGTH;
-static const float TIBIA_LENGTH_SQR = TIBIA_LENGTH * TIBIA_LENGTH;
+const float LEG_LENGTH = HIP_LENGTH + FEMUR_LENGTH + TIBIA_LENGTH;
 
-static const float FEMURTIBIA_DIFF = fabs(FEMUR_LENGTH - TIBIA_LENGTH);
-static const float FEMUR_LENGTH_X2 = FEMUR_LENGTH * 2;
-static const float FEMURTIBIASQR_DIFF = FEMUR_LENGTH_SQR - TIBIA_LENGTH_SQR;
-static const float FEMURTIBIASQR_TOTAL = FEMUR_LENGTH_SQR + TIBIA_LENGTH_SQR;
-static const float FEMURTIBIA_PRODUCT_X2 = FEMUR_LENGTH * TIBIA_LENGTH * 2;
+const float HIP_LENGTH_SQR = HIP_LENGTH * HIP_LENGTH;
+const float FEMUR_LENGTH_SQR = FEMUR_LENGTH * FEMUR_LENGTH;
+const float TIBIA_LENGTH_SQR = TIBIA_LENGTH * TIBIA_LENGTH;
 
-static const float LEG_LENGTH = 16.1;
-static const float FEMUR_TIBIA_DIFF = 3.9;
+const float FEMURTIBIA_DIFF = fabs(FEMUR_LENGTH - TIBIA_LENGTH);
+const float FEMUR_LENGTH_X2 = FEMUR_LENGTH * 2;
+const float FEMURTIBIASQR_DIFF = FEMUR_LENGTH_SQR - TIBIA_LENGTH_SQR;
+const float FEMURTIBIASQR_TOTAL = FEMUR_LENGTH_SQR + TIBIA_LENGTH_SQR;
+const float FEMURTIBIA_PRODUCT_X2 = FEMUR_LENGTH * TIBIA_LENGTH * 2;
 
-//Leg Angles
-static const float LEG_ANGLE_FRONTRIGHT = 1.047;
-static const float LEG_ANGLE_MIDRIGHT = 0;
-static const float LEG_ANGLE_BACKRIGHT = 5.237;
-static const float LEG_ANGLE_FRONTLEFT = 2.094;
-static const float LEG_ANGLE_MIDLEFT = 3.142;
-static const float LEG_ANGLE_BACKLEFT = 4.189;
+//The width of the head and back
+/**
+     * This is just used to determine the leg positions
+     * Since it is an elongated hexagon, the width is the length of the hexagon's sides with radius of BODY_WIDTH
+    */
 
-static const float TIBIA_ANGLE_OFFSET = M_PI / 6;
+const float BODY_Y_OFFSET = 1.5;
 
-static const float LEG_HEIGHT_OFFSET = 2.3;
+//Leg Front Back X Offset
+const float X_FB_LEG_OFFSET = cos(M_PI / 3) * 7;
+const float X_MID_LEG_OFFSET = 5.5;
+const float Y_LEG_OFFSET = AXIS_HEIGHT / 2 - BODY_Y_OFFSET;
+//Leg Front Back Z offset
+const float Z_FB_LEG_OFFSET = sin(M_PI / 3) * 7;
 
-//Leg Offsets
-static const Vec3 LEG_OFFSET_FRONTRIGHT = Vec3(4.6, LEG_HEIGHT_OFFSET, 8.2);
-static const Vec3 LEG_OFFSET_MIDRIGHT = Vec3(5.5, LEG_HEIGHT_OFFSET, 0);
-static const Vec3 LEG_OFFSET_BACKRIGHT = Vec3(4.6, LEG_HEIGHT_OFFSET, -8.2);
-static const Vec3 LEG_OFFSET_FRONTLEFT = Vec3(-4.6, LEG_HEIGHT_OFFSET, 8.2);
-static const Vec3 LEG_OFFSET_MIDLEFT = Vec3(-5.5, LEG_HEIGHT_OFFSET, 0);
-static const Vec3 LEG_OFFSET_BACKLEFT = Vec3(-4.6, LEG_HEIGHT_OFFSET, -8.2);
+const uint8_t MAX_TIBIA_ANGLE = 180;
 
-//Directions
-static const float RIGHT_FORWARD = 2.356;
-static const float FORWARD = 1.571;
-static const float LEFT_FORWARD = 0.785;
-static const float RIGHT = 3.142;
-static const float LEFT = 0;
-static const float RIGHT_BACKWARD = 3.927;
-static const float BACKWARD = 4.712;
-static const float LEFT_BACKWARD = 5.498;
+const uint8_t HIP_ANGLE_RANGE = 50;
+const uint8_t MAX_HIP_ANGLE = 90 + HIP_ANGLE_RANGE;
+const uint8_t MIN_HIP_ANGLE = 90 - HIP_ANGLE_RANGE;
+
+const uint8_t START_HIP_ANGLE = 90;
+const uint8_t START_FEMUR_ANGLE = 180;
+const uint8_t START_TIBIA_ANGLE = MAX_TIBIA_ANGLE;
+
+const float BODY_WIDTH = 13.5;
+//The distance of the foot is the radius of a circle and the body's center is the origin
+const float FOOT_DIST = BODY_WIDTH / 2 + HIP_LENGTH + FEMUR_LENGTH / 2.5;
+const float FOOT_Y = 0;
+
+//cos(LEG_ANGLE) * FOOT_DIST, 0, sin(LEG_ANGLE) * FOOT_DIST;
+const Vec3 START_FOOT_POS_FRONTRIGHT = Vec3(cos(LEG_ANGLE_FRONTRIGHT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_FRONTRIGHT) * FOOT_DIST);
+const Vec3 START_FOOT_POS_MIDRIGHT = Vec3(cos(LEG_ANGLE_MIDRIGHT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_MIDRIGHT) * FOOT_DIST);
+const Vec3 START_FOOT_POS_BACKRIGHT = Vec3(cos(LEG_ANGLE_BACKRIGHT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_BACKRIGHT) * FOOT_DIST);
+const Vec3 START_FOOT_POS_FRONTLEFT = Vec3(cos(LEG_ANGLE_FRONTLEFT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_FRONTLEFT) * FOOT_DIST);
+const Vec3 START_FOOT_POS_MIDLEFT = Vec3(cos(LEG_ANGLE_MIDLEFT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_MIDLEFT) * FOOT_DIST);
+const Vec3 START_FOOT_POS_BACKLEFT = Vec3(cos(LEG_ANGLE_BACKLEFT) * FOOT_DIST, FOOT_Y, sin(LEG_ANGLE_BACKLEFT) * FOOT_DIST);
+
+const float RIGHT_FORWARD = 3 * M_PI / 4;
+const float FORWARD = M_PI / 2;
+const float LEFT_FORWARD = M_PI / 4;
+const float RIGHT = M_PI;
+const float LEFT = 0;
+const float RIGHT_BACKWARD = 5 * M_PI / 4;
+const float BACKWARD = 3 * M_PI / 2;
+const float LEFT_BACKWARD = 7 * M_PI / 4;
 
 //Defaults
-static const float START_POS_LOW = 2;
-static const float START_POS_HIGH = 4;
-static const float START_ANGLE = 90;
+const float CROUCH_HEIGHT = 3;
+const float RISE_HEIGHT = 5;
+const float BODY_TRANS_DIST = 2;
+const float START_HEIGHT = CROUCH_HEIGHT;
+const float START_ANGLE = M_PI_2;
+const float MAX_PITCH = M_PI / 18;
+const float MAX_ROLL = M_PI / 18;
 
-static const uint16_t START_HIP_ANGLE = 90;
-static const uint16_t START_FEMUR_ANGLE = 180;
-static const uint16_t START_TIBIA_ANGLE = 180;
+//Walk properties
+const int BASE_STEP_DURATION = 500;      //Duration in ms that one walk cycle takes to complete
+const float MAXRAD_PERSTEP = M_PI_2 / 8; //Maximum angle of rotation per step
 
-static const float START_FOOT_DIST = 12;
+const float MIN_STEP_HEIGHT = 0.5;
+const float STEP_DIST = 2;
+const float BODY_TO_STEP_Y_RATIO = 0.667;
 
-//cos(LEG_ANGLE) * START_FOOT_DIST, 0, sin(LEG_ANGLE) * START_FOOT_DIST;
-static const Vec3 START_FOOT_POS_FRONTRIGHT = Vec3(cos(LEG_ANGLE_FRONTRIGHT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_FRONTRIGHT) * START_FOOT_DIST);
-static const Vec3 START_FOOT_POS_MIDRIGHT = Vec3(cos(LEG_ANGLE_MIDRIGHT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_MIDRIGHT) * START_FOOT_DIST);
-static const Vec3 START_FOOT_POS_BACKRIGHT = Vec3(cos(LEG_ANGLE_BACKRIGHT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_BACKRIGHT) * START_FOOT_DIST);
-static const Vec3 START_FOOT_POS_FRONTLEFT = Vec3(cos(LEG_ANGLE_FRONTLEFT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_FRONTLEFT) * START_FOOT_DIST);
-static const Vec3 START_FOOT_POS_MIDLEFT = Vec3(cos(LEG_ANGLE_MIDLEFT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_MIDLEFT) * START_FOOT_DIST);
-static const Vec3 START_FOOT_POS_BACKLEFT = Vec3(cos(LEG_ANGLE_BACKLEFT) * START_FOOT_DIST, 0, sin(LEG_ANGLE_BACKLEFT) * START_FOOT_DIST);
+const int JOYSTICK_POSITIVE_MAXPOS = 255;
+const int JOYSTICK_NEGATIVE_MAXPOS = 1;
+const int JOYSTICK_MAXDIST = 127;
+const int JOYSTICK_ZERO_POS = 128;
 
-static const uint16_t HIP_MIN_ANGLE = 60;
-static const uint16_t HIP_MAX_ANGLE = 120;
-
-static const uint16_t BASE_STEP_DUR = 1000;
-static const float STEP_HEIGHT = 2;
-static const float STEP_DIST = 3;
-static const float STEP_DIST_X2 = STEP_DIST * 2;
+//Servo driver properties
+const uint16_t MIN_US = 500;
+const uint16_t MAX_US = 2600;
+const uint8_t SERVO_FREQ = 50;
+const uint32_t DRIVER_FREQ = 27000000;
 
 #endif

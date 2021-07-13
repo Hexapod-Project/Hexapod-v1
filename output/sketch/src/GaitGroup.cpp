@@ -1,33 +1,10 @@
 #include "GaitGroup.h"
+#include "../includes/HexapodConstants.h"
 
-GaitGroup::GaitGroup(LEG *legIndices, int legIndicesSize, int pauseDur)
+GaitGroup::GaitGroup(LEG *legIndices, int legIndicesSize, float stepTimeOffset)
 {
     mLegIndices = legIndices;
     mLegIndicesSize = legIndicesSize;
-    mPauseDur = pauseDur;
-}
-
-void GaitGroup::setStartTime(int startTime, int stepDur, int timeOffset)
-{
-    mStartTime = startTime + timeOffset + stepDur;
-}
-
-int GaitGroup::getStartTime()
-{
-    return mStartTime;
-}
-
-int GaitGroup::getPauseDur()
-{
-    return mPauseDur;
-}
-
-LEG* GaitGroup::getLegIndices()
-{
-    return mLegIndices;
-}
-
-int GaitGroup::getLegIndicesSize()
-{
-    return mLegIndicesSize;
-}
+    mStepTimeOffset = stepTimeOffset;
+    mStepDuration = BASE_STEP_DURATION * (1 + (mLegIndicesSize - 1) * mStepTimeOffset);
+};

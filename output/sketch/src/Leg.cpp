@@ -1,20 +1,19 @@
 #include "Leg.h"
 #include <math.h>
-#include <HardwareSerial.h>
 #include "../includes/HexapodConstants.h"
-#include "../includes/Constants.h"
 #include "Tools.h"
+#include <HardwareSerial.h>
 
 extern HardwareSerial Serial;
 
-void Leg::setBase(Vec3 pos, float angle, bool isLeftLeg)
+void Leg::setBase(Vec3 pos, float angle)
 {
-    mStartPos = pos;
+    mStartPos = pos;    
 
     //90deg is middle of the servos max angle of rotation (which is the default angle of the leg)
     mStartAngle = angle;
 
-    mBaseMatrix = mBaseMatrix.translate(pos);
+    mBaseMatrix = mBaseMatrix.translate(pos).rotate(Vec3(0, -mStartAngle, 0));
 }
 
 void Leg::setRoot(Mat4 *matrix)
@@ -22,20 +21,19 @@ void Leg::setRoot(Mat4 *matrix)
     mRootMatrix = matrix;
 }
 
-void Leg::attach(int hipPin, int femurPin, int tibiaPin)
+void Leg::attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PWMServoDriver* servoDriver)
 {
     mHipAngle = START_HIP_ANGLE;
     mFemurAngle = START_FEMUR_ANGLE;
     mTibiaAngle = START_TIBIA_ANGLE;
 
-    mHipServo.attach(hipPin);
-    mHipServo.write(mHipAngle);
+    mHipPin = hipPin;
+    mFemurPin = femurPin;
+    mTibiaPin = tibiaPin;
 
-    mFemurServo.attach(femurPin);
-    mFemurServo.write(mFemurAngle);
-
-    mTibiaServo.attach(tibiaPin);
-    mTibiaServo.write(mTibiaAngle);
+    mServoDriver = servoDriver;
+    
+    updateServoAngles();
 }
 
 void Leg::setStartFootPos(Vec3 startPos)
@@ -47,11 +45,6 @@ void Leg::setStartFootPos(Vec3 startPos)
 void Leg::setTargetFootPos(Vec3 targetPos)
 {
     mTargetFootPos = targetPos;
-}
-
-Vec3 Leg::getFootPos()
-{
-    return mFootPos;
 }
 
 void Leg::calculateJointAngles()
@@ -85,19 +78,19 @@ void Leg::calculateJointAngles()
     if (dist < LEG_LENGTH)
     {
         float tibiaAcosVal = (FEMURTIBIASQR_TOTAL - distSqr) / FEMURTIBIA_PRODUCT_X2;
-        tibiaAngle = M_PI - acos(tibiaAcosVal) + TIBIA_ANGLE_OFFSET;
+        tibiaAngle = M_PI - acos(tibiaAcosVal);
     }
 
-    hipAngle = toPositiveRad(-(mStartAngle - toPositiveRad(hipAngle)) + M_PI_2);
+    hipAngle = M_PI_2 - hipAngle;
 
-    if (!isnanf(hipAngle))
-        mHipAngle = clampTo360(hipAngle * RADTODEG);
+    if (!isnan(hipAngle))
+        mHipAngle = clampTo360Deg(hipAngle * RAD_TO_DEG);
 
-    if (!isnanf(femurAngle))
-        mFemurAngle = clampTo360(femurAngle * RADTODEG);
+    if (!isnan(femurAngle))
+        mFemurAngle = clampTo360Deg(femurAngle * RAD_TO_DEG);
 
-    if (!isnanf(tibiaAngle))
-        mTibiaAngle = clampTo360(tibiaAngle * RADTODEG);
+    if (!isnan(tibiaAngle))
+        mTibiaAngle = clampTo360Deg(tibiaAngle * RAD_TO_DEG);
 }
 
 void Leg::updateServoAngles()
@@ -107,14 +100,17 @@ void Leg::updateServoAngles()
 
 void Leg::setAngles(float hipAngle, float femurAngle, float tibiaAngle)
 {
-    if(hipAngle > HIP_MAX_ANGLE)
-        hipAngle = HIP_MAX_ANGLE;
-    else if (hipAngle < HIP_MIN_ANGLE)
-        hipAngle = HIP_MIN_ANGLE;
+    if(tibiaAngle > MAX_TIBIA_ANGLE)
+        tibiaAngle = MAX_TIBIA_ANGLE;
 
-    mHipServo.write(hipAngle);
-    mFemurServo.write(femurAngle);
-    mTibiaServo.write(tibiaAngle);
+    if(hipAngle > MAX_HIP_ANGLE)
+        hipAngle = MAX_HIP_ANGLE;
+    else if (hipAngle < MIN_HIP_ANGLE)
+        hipAngle = MIN_HIP_ANGLE;
+
+    mServoDriver->writeMicroseconds(mHipPin, degToUs(hipAngle));
+    mServoDriver->writeMicroseconds(mFemurPin, degToUs(femurAngle));
+    mServoDriver->writeMicroseconds(mTibiaPin, degToUs(tibiaAngle));    
 }
 
 void Leg::resetFootTargetPos()
@@ -130,4 +126,8 @@ Vec3 Leg::getTargetFootPos()
 Vec3 Leg::getStartFootPos()
 {
     return mStartFootPos;
+}
+
+Vec3 Leg::getAngles() {
+    return Vec3(mHipAngle, mFemurAngle, mTibiaAngle);
 }

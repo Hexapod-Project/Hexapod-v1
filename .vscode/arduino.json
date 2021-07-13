@@ -1,6 +1,6 @@
 {
-    "configuration": "cpu=atmega2560",
-    "board": "arduino:avr:mega",
+    "configuration": "PSRAM=disabled,PartitionScheme=default,CPUFreq=160,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none",
+    "board": "esp32:esp32:esp32",
     "sketch": "Main.cpp",
     "port": "/dev/ttyUSB0",
     "output": "output"

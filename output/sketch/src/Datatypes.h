@@ -10,11 +10,18 @@ public:
     float mY;
 
     Vec2(){};
+    Vec2(float pos);
     Vec2(float x, float y);
     float magnitude();
 
     Vec2 operator+=(Vec2 input);
     Vec2 operator/(float input);
+    Vec2 operator/(Vec2 input);
+    Vec2 operator-(Vec2 input);
+    bool operator==(Vec2 input);
+    bool operator!=(Vec2 input);
+
+    String toString();
 };
 
 class Vec3
@@ -27,13 +34,13 @@ public:
     Vec3() {};
     Vec3(float x, float y, float z);
     float magnitude();    
-    Vec3 operator + (Vec3 input);
+    Vec3 operator + (Vec3 input);        
     Vec3 operator + (float input);
     Vec3 operator - (Vec3 input);
     Vec3 operator-();
     Vec3 operator * (float input);
-    Vec3 operator -= (Vec3 input);
-    Vec3 operator += (Vec3 input);
+    void operator -= (Vec3 input);
+    void operator += (Vec3 input);
     void operator = (Vec3 input);
     String toString();
 };

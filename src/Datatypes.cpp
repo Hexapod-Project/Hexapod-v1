@@ -1,7 +1,14 @@
 #include "Datatypes.h"
 #include <math.h>
+#include "Tools.h"
 
 //=============================Vec2=============================
+Vec2::Vec2(float pos)
+{
+    mX = pos;
+    mY = pos;
+}
+
 Vec2::Vec2(float x, float y)
 {
     mX = x;
@@ -20,8 +27,34 @@ Vec2 Vec2::operator+=(Vec2 input)
 
 Vec2 Vec2::operator/(float input)
 {
-    return Vec2(mX/input, mY/input);
+    return Vec2(mX / input, mY / input);
 }
+
+Vec2 Vec2::operator/(Vec2 input)
+{
+    return Vec2(mX / input.mX, mY / input.mY);
+}
+
+Vec2 Vec2::operator-(Vec2 input)
+{
+    return Vec2(mX - input.mX, mY - input.mY);
+}
+
+bool Vec2::operator==(Vec2 input)
+{
+    return compareFloats(mX, input.mX) && compareFloats(mY, input.mY);
+}
+
+bool Vec2::operator!=(Vec2 input)
+{
+    return !compareFloats(mX, input.mX) || !compareFloats(mY, input.mY);
+}
+
+String Vec2::toString()
+{
+    return (String)mX + ", " + mY;
+}
+
 
 //=============================Vec3=============================
 Vec3::Vec3(float x, float y, float z)
@@ -56,14 +89,18 @@ Vec3 Vec3::operator+(float input)
     return Vec3(mX + input, mY + input, mZ + input);
 }
 
-Vec3 Vec3::operator-=(Vec3 input)
+void Vec3::operator-=(Vec3 input)
 {
-    return *this - input;
+    mX -= input.mX;
+    mY -= input.mY;
+    mZ -= input.mZ;
 }
 
-Vec3 Vec3::operator+=(Vec3 input)
+void Vec3::operator+=(Vec3 input)
 {
-    return *this + input;
+    mX += input.mX;
+    mY += input.mY;
+    mZ += input.mZ;
 }
 
 Vec3 Vec3::operator*(float input)
@@ -73,7 +110,7 @@ Vec3 Vec3::operator*(float input)
 
 String Vec3::toString()
 {
-    return (String) mX + ", " + mY + ", " + mZ;
+    return (String)mX + ", " + mY + ", " + mZ;
 }
 
 void Vec3::operator=(Vec3 input)

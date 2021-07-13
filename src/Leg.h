@@ -1,17 +1,15 @@
 #ifndef LEG_H
 #define LEG_H
 
-#include <Servo.h>
 #include "Datatypes.h"
+#include "Adafruit_PWMServoDriver.h"
 
 class Leg
 {
 private:
-    Servo mHipServo;
-    Servo mFemurServo;
-    Servo mTibiaServo;    
-    
-    Vec3 mFootPos;
+    Adafruit_PWMServoDriver *mServoDriver;
+    uint8_t mHipPin, mFemurPin, mTibiaPin;
+
     Vec3 mStartFootPos;
     Vec3 mTargetFootPos;
 
@@ -26,18 +24,18 @@ private:
     float mTibiaAngle;
 
 public:
-    void setBase(Vec3 pos, float angle, bool isLeftLeg = false);
+    void setBase(Vec3 pos, float angle);
     void setRoot(Mat4 *matrix);
-    void attach(int hipPin, int femurPin, int tibiaPin);
+    void attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PWMServoDriver* servoDriver);
     void setStartFootPos(Vec3 startPos);
     void setTargetFootPos(Vec3 targetPos);
-    Vec3 getFootPos();
     void calculateJointAngles();
     void updateServoAngles();
-    void setAngles(float hipAngle, float femurAngle, float tibiaAngle); 
+    void setAngles(float hipAngle, float femurAngle, float tibiaAngle);
     void resetFootTargetPos();
     Vec3 getTargetFootPos();
-    Vec3 getStartFootPos();    
+    Vec3 getStartFootPos();
+    Vec3 getAngles();
 };
 
 #endif

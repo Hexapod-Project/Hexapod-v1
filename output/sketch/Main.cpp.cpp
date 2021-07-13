@@ -1,55 +1,105 @@
 #include <Arduino.h>
 #line 1 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
 #include "src/Hexapod.h"
+#include "src/Datatypes.h"
+#include "src/Tools.h"
 #include "includes/HexapodConstants.h"
-#include <HardwareSerial.h>
+#include "includes/Enums.h"
+#include "HardwareSerial.h"
+#include "BluetoothSerial.h"
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+#include "esp32-hal-bt.h"
 
-Hexapod hexapod;
 
 extern HardwareSerial Serial;
-uint8_t input;
+Hexapod hexapod;
 
-uint32_t startTime;
-bool isWalking = false;
+BluetoothSerial btSerial;
 
-#line 13 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+const uint8_t BYTESIZE = 5;
+byte buffer[BYTESIZE];
+
+#line 21 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
 void setup();
-#line 19 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+#line 30 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
 void loop();
-#line 13 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+#line 37 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+bool initBluetooth();
+#line 61 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+void printBluetoothAddr();
+#line 78 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
+void checkBtData();
+#line 21 "/home/edwinlee/Documents/Projects/HexapodRobot/Main.cpp"
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(115200);    
+    initBluetooth();
+    //printBluetoothAddr();
+    
     hexapod.setup();
 }
 
 void loop()
 {
-    if (Serial.available() > 0)
-    {
-        input = Serial.read();
+    checkBtData();
+    hexapod.update();
+}
 
-        switch (input)
-        {
-        case 'w':
-            hexapod.startWalk(FORWARD);
-            break;
-        case 'a':
-            hexapod.startWalk(LEFT);
-            break;
-        case 'd':
-            hexapod.startWalk(RIGHT);
-            break;
-        case 'x':
-            hexapod.startWalk(BACKWARD);
-            break;
-        case 's':
-            hexapod.stopWalk();
-            break;
-        default:
-            break;
-        }
+
+bool initBluetooth()
+{
+    if (!btStart())
+    {
+        Serial.println("Failed to start bluetooth.");
+        return false;
     }
 
-    hexapod.update();
+    if (esp_bluedroid_init() != ESP_OK)
+    {
+        Serial.println("Failed to initialize bluedroid.");
+        return false;
+    }
+
+    if (esp_bluedroid_enable() != ESP_OK)
+    {
+        Serial.println("Failed to enable bluedroid.");
+        return false;
+    }
+
+    btSerial.begin("Hexxo");
+    return true;
+}
+
+void printBluetoothAddr()
+{
+    const uint8_t *addr = esp_bt_dev_get_address();
+
+    for (int i = 0; i < 6; i++)
+    {
+        char str[3];
+
+        sprintf(str, "%02X", addr[i]);
+        Serial.print(str);
+
+        if (i < 5)
+            Serial.print(":");
+    }
+    Serial.println();
+}
+
+void checkBtData()
+{
+    if (btSerial.available())
+    {
+        btSerial.readBytes(buffer, BYTESIZE);
+                
+        float moveDir = jyStkAngleToRad(buffer[MOVE_IDX]);                 
+        float turnDir = jyStkAngleToRad(buffer[TURN_IDX]);
+        float transDir = jyStkAngleToRad(buffer[TRANS_IDX]);
+        float rotDir = jyStkAngleToRad(buffer[ROT_IDX]);
+        
+        hexapod.updateDirs(moveDir, turnDir, transDir, rotDir);
+        hexapod.setMisc(buffer[MISC_IDX]);
+    }
 }

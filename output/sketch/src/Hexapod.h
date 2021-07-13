@@ -2,47 +2,83 @@
 #define HEXAPOD_H
 
 #include "Leg.h"
+#include "Gait.h"
+#include "GaitGroup.h"
+#include "Adafruit_PWMServoDriver.h"
 #include "../includes/HexapodConstants.h"
-
-class GaitManager;
+#include "Wire.h"
 
 class Hexapod
 {
-private:
-    Vec3 mStartBodyPos;
-    Vec3 mStartBodyRot;
-    Vec3 mBodyPos;
-    Vec3 mBodyRot;
-
-    Mat4 mBaseMatrix;
-    Mat4 mRootMatrix;
-
-    Leg mLegs[LEG_COUNT];
-    Vec3 mLegStartPos[LEG_COUNT];
-
-    LEG mLegSequence[2][3] = {
-    {LEG::FRONTRIGHT, LEG::MIDLEFT, LEG::BACKRIGHT},
-    {LEG::FRONTLEFT, LEG::MIDRIGHT, LEG::BACKLEFT}};
-
-    uint8_t mLegSeqIdx;
-
-    bool mIsChangeDir = false;
-    float mCurrDir;
-    float mCosMoveDir, mSinMoveDir;
-
-    MOVESTATE mMoveState = MOVESTATE::STOPPED;
-    unsigned long mStepStartTime;
-
-    void walk();
-    void resetFootPos();
-    void resetBodyPos();
-
 public:
     void setup();
-    void updateLegs();
-    void update();    
-    void startWalk(float moveDir);
-    void stopWalk();
+    void update();
+
+    int mInputGaitType = GAITTYPE::TRIPOD;
+
+    void updateDirs(float moveDir = -1, float turnDir = -1, float transDir = -1, float rotDir = -1);
+    void setMisc(uint8_t miscState);
+    void calibrateMode(uint16_t hipAngle = 90, uint16_t femurAngle = 90, uint16_t tibiaAngle = 0);
+
+private:
+    bool mCalibrateMode = false;
+
+    Adafruit_PWMServoDriver mServoDriverR = Adafruit_PWMServoDriver(0x41),
+                            mServoDriverL = Adafruit_PWMServoDriver(0x40);
+
+    Mat4 mBaseMatrix, mBodyMatrix;
+    Vec3 mBodyStartPos;
+    Vec3 mBodyPos, mBodyRot;
+
+    MOVETYPE mMoveTypeBtn = MOVETYPE::WALK;
+    MOVETYPE mMoveType = MOVETYPE::WALK;
+
+    MOVESTATE mMoveState = MOVESTATE::STOPPED;
+
+    Leg mLegs[LEG_COUNT];
+
+    Gait mGaits[4];
+    GAITTYPE mGaitType = GAITTYPE::TRIPOD;
+    LEG *mLegIndices;
+    Gait *mCurrGait;
+    int mGaitGrpIdx;
+    int mGroupStoppedCount = 0;
+    int mCurrGaitGrpSize;
+    int mLegIndicesSize;
+    float mStepTimeOffset;
+
+    Vec3 mBodyStepStartPos;
+    Vec3 mLegStepStartPos[LEG_COUNT];
+    float mLegStepStartRot[LEG_COUNT];
+    Vec3 mStepDist[LEG_COUNT];
+    float mPrevStepHeight[LEG_COUNT];
+
+    float mStepRotAngle;
+    float mBodyStepStartYaw;
+
+    unsigned long mStepStartTime;
+    int mStepDuration;
+    float mStepDistMulti;
+    float mStepHeight;
+    float mBaseStepHeight;
+
+    float mFaceDir = FORWARD, mTargetFaceDir = FORWARD;
+    float mMoveDir = 0;
+    float mCosMoveDir, mSinMoveDir;
+
+    bool mNaturalWalkMode = true;    
+
+    void initLegs();
+    void setLegsPos();
+    void initGaits();
+    void updateLegs();    
+    void setMoveDir(float moveDir);
+    void walk();
+    void setNextStepRot();
+    void setNextStep();
+    void initStep();
+    void setBodyHeight(float height);
+    void transRotBody(float transDir, float rotDir);
 };
 
 #endif
