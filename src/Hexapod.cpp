@@ -108,12 +108,12 @@ void Hexapod::initGaits()
                                                             GaitGroup(new LEG[3]{LEG::FRONTRIGHT, LEG::MIDLEFT, LEG::BACKRIGHT}, 3, 0.3)};
     mGaits[GAITTYPE::TRIPLE].mGaitGroupsSize = 2;
 
-    mGaits[GAITTYPE::WAVE].mGaitGroups = new GaitGroup[2]{GaitGroup(new LEG[3]{LEG::FRONTRIGHT, LEG::MIDRIGHT, LEG::BACKRIGHT}, 3, 1),
-                                                          GaitGroup(new LEG[3]{LEG::FRONTLEFT, LEG::MIDLEFT, LEG::BACKLEFT}, 3, 1)};
+    mGaits[GAITTYPE::WAVE].mGaitGroups = new GaitGroup[2]{GaitGroup(new LEG[3]{LEG::FRONTRIGHT, LEG::MIDRIGHT, LEG::BACKRIGHT}, 3, 0.7),
+                                                          GaitGroup(new LEG[3]{LEG::FRONTLEFT, LEG::MIDLEFT, LEG::BACKLEFT}, 3, 0.7)};
     mGaits[GAITTYPE::WAVE].mGaitGroupsSize = 2;
 
-    mGaits[GAITTYPE::RIPPLE].mGaitGroups = new GaitGroup[2]{GaitGroup(new LEG[3]{LEG::FRONTRIGHT, LEG::MIDRIGHT, LEG::BACKRIGHT}, 3, 1),
-                                                            GaitGroup(new LEG[3]{LEG::BACKLEFT, LEG::MIDLEFT, LEG::FRONTLEFT}, 3, 1)};
+    mGaits[GAITTYPE::RIPPLE].mGaitGroups = new GaitGroup[2]{GaitGroup(new LEG[3]{LEG::FRONTRIGHT, LEG::MIDRIGHT, LEG::BACKRIGHT}, 3, 0.8),
+                                                            GaitGroup(new LEG[3]{LEG::BACKLEFT, LEG::MIDLEFT, LEG::FRONTLEFT}, 3, 0.8)};
     mGaits[GAITTYPE::RIPPLE].mGaitGroupsSize = 2;
 
     mCurrGaitGrpSize = mGaits[mGaitType].mGaitGroupsSize;
@@ -176,22 +176,22 @@ void Hexapod::setStance(float height, BTDATA_MISC stance)
 
 void Hexapod::transRotBody(float transDir, float rotDir)
 {
-    Vec3 tempPos = mBodyPos;
-    Vec3 tempRot = mBodyRot;
+    Vec3 tempPos;
+    Vec3 tempRot;
 
     if (transDir > -1)
     {
-        tempPos.mX += cos(transDir) * BODY_TRANS_DIST;
-        tempPos.mZ += sin(transDir) * BODY_TRANS_DIST;
+        tempPos.mX = cos(transDir) * BODY_TRANS_DIST;
+        tempPos.mZ = sin(transDir) * BODY_TRANS_DIST;
     }
 
     if (rotDir > -1)
     {
-        tempRot.mZ -= cos(rotDir) * MAX_ROLL;
-        tempRot.mX -= sin(rotDir) * MAX_PITCH;
+        tempRot.mZ = -cos(rotDir) * MAX_ROLL;
+        tempRot.mX = -sin(rotDir) * MAX_PITCH;
     }
 
-    mBodyMatrix = mBaseMatrix.translate(tempPos).rotate(tempRot);
+    mBodyMatrix = mBaseMatrix.translate(tempPos).rotate(tempRot).translate(mBodyPos).rotate(mBodyRot);
 
     updateLegs();
 }
