@@ -1,4 +1,4 @@
-g# Hexapod Robot
+# Hexapod Robot
 
 The source code of a hexapod robot created with Arduino based libraries on a Esp32 Microcontroller. 
 
