@@ -176,22 +176,22 @@ void Hexapod::setStance(float height, BTDATA_MISC stance)
 
 void Hexapod::transRotBody(float transDir, float rotDir)
 {
-    Vec3 tempPos;
-    Vec3 tempRot;
+    Vec3 tempPos = mBodyPos;
+    Vec3 tempRot = mBodyRot;
 
     if (transDir > -1)
     {
-        tempPos.mX = cos(transDir) * BODY_TRANS_DIST;
-        tempPos.mZ = sin(transDir) * BODY_TRANS_DIST;
+        tempPos.mX += cos(transDir) * BODY_TRANS_DIST;
+        tempPos.mZ += sin(transDir) * BODY_TRANS_DIST;
     }
 
     if (rotDir > -1)
     {
-        tempRot.mZ = -cos(rotDir) * MAX_ROLL;
-        tempRot.mX = -sin(rotDir) * MAX_PITCH;
+        tempRot.mZ -= cos(rotDir) * MAX_ROLL;
+        tempRot.mX -= sin(rotDir) * MAX_PITCH;
     }
 
-    mBodyMatrix = mBaseMatrix.translate(tempPos).rotate(tempRot).translate(mBodyPos).rotate(mBodyRot);
+    mBodyMatrix = mBaseMatrix.translate(tempPos).rotate(tempRot);
 
     updateLegs();
 }
@@ -199,7 +199,7 @@ void Hexapod::transRotBody(float transDir, float rotDir)
 void Hexapod::updateDirs(float moveDir, float turnDir, float transDir, float rotDir)
 {
     if (mMoveState == MOVESTATE::STOPPED)
-        transRotBody(transDir + mFaceDirDiff, rotDir + mFaceDirDiff);
+        transRotBody(transDir, rotDir);
 
     //Walk
     if (moveDir <= -1)
@@ -375,6 +375,18 @@ void Hexapod::walk()
             mStepRotAngle = 0;
             mTargetFaceDir = mFaceDir;
             mGroupStoppedCount = 0;
+
+            //Temporary fix for gimbal lock after turning
+            mFaceDir = FORWARD;
+            mTargetFaceDir = mFaceDir;
+            mFaceDirDiff = 0;
+            
+            Vec3 rootPos = Vec3(mBodyPos.mX, 0, mBodyPos.mZ);
+            for(uint8_t legIdx = 0; legIdx < LEG_COUNT; legIdx ++)
+                mLegs[legIdx].setTargetFootPos(rotateAroundY(mLegs[legIdx].getTargetFootPos() - rootPos, mBodyRot.mY) + rootPos);
+
+            mBodyMatrix = mBodyMatrix.rotate(-mBodyRot.mY, Vec3(0, 1, 0));
+            mBodyRot.mY = 0;                            
 
             return;
         }
