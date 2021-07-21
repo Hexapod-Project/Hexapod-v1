@@ -71,7 +71,6 @@ void Hexapod::setLegsPos()
     mBodyStartPos = Vec3(0, BODY_Y_OFFSET, 0);
 
     mBaseMatrix = mBaseMatrix.translate(mBodyStartPos);
-    mBodyMatrix.set(mBaseMatrix);
 
     mBodyPos.mY = START_HEIGHT;
     mBodyMatrix = mBaseMatrix.translate(mBodyPos);
@@ -372,21 +371,24 @@ void Hexapod::walk()
         {
             mMoveState = MOVESTATE::STOPPED;
             mStepDistMulti = 0;
-            mStepRotAngle = 0;
-            mTargetFaceDir = mFaceDir;
+            mStepRotAngle = 0;            
             mGroupStoppedCount = 0;
 
             //Temporary fix for gimbal lock after turning
             mFaceDir = FORWARD;
             mTargetFaceDir = mFaceDir;
             mFaceDirDiff = 0;
-            
-            Vec3 rootPos = Vec3(mBodyPos.mX, 0, mBodyPos.mZ);
+                        
             for(uint8_t legIdx = 0; legIdx < LEG_COUNT; legIdx ++)
-                mLegs[legIdx].setTargetFootPos(rotateAroundY(mLegs[legIdx].getTargetFootPos() - rootPos, mBodyRot.mY) + rootPos);
+                mLegs[legIdx].setTargetFootPos(mLegs[legIdx].getStartFootPos());            
 
-            mBodyMatrix = mBodyMatrix.rotate(-mBodyRot.mY, Vec3(0, 1, 0));
-            mBodyRot.mY = 0;                            
+            mBodyPos.mX = 0;
+            mBodyPos.mZ = 0;
+            mBodyRot.mY = 0;
+            mBodyStepStartYaw = 0;
+            mBodyMatrix = mBaseMatrix.translate(mBodyPos);    
+
+            updateLegs();        
 
             return;
         }
