@@ -28,4 +28,16 @@ The movement algorithm is based on the <a href="https://github.com/edw-lee/Hexap
 
 ### Build Diagrams
 
-* To Be Added.
+* No dimensions are provided in the diagrams as it might not be accurate for different hardwares used.
+* These diagrams are for references only. Feel free to get creative with the design.
+* My real build for this hexapod was recycled to reuse the parts for version 2. Hence, the lack of real pictures of the Hexapod.
+
+<img src='/pictures/Leg-ExplodedView.png' width=800>
+
+<img src='/pictures/Leg-Assembled.png' width=800>
+
+<img src='/pictures/Body-ExplodedView.png' width=800>
+
+<img src='/pictures/Body-Assembled.png' width=800>
+
+<img src='/pictures/Hexapod-Full.png' width=800>
