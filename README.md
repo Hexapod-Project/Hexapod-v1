@@ -23,7 +23,8 @@ The movement algorithm is based on the <a href="https://github.com/edw-lee/Hexap
 
 ### Circuit Diagram
 
-* To Be Added.
+![Hexapod Circuit Diagram](/pictures/circuit.png)
+* The pins to the servos' PWM input can be changed in the Hexapod class initLegs() function in the [Hexapod.cpp file](/src/Hexapod.cpp) .
 
 ### Build Diagrams
 
