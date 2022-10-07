@@ -1,7 +1,7 @@
 {
-    "configuration": "PSRAM=disabled,PartitionScheme=default,CPUFreq=160,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none",
-    "board": "esp32:esp32:esp32",
+    "configuration": "PSRAM=disabled,PartitionScheme=default,CPUFreq=160,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=WARNING",
     "sketch": "Main.cpp",
-    "port": "/dev/ttyUSB0",
-    "output": "output"
+    "output": "build",
+    "board": "esp32:esp32:esp32doit-devkit-v1",
+    "port": "/dev/ttyUSB0"
 }

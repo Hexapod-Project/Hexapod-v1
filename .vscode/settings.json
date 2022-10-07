@@ -1,6 +1,15 @@
 {
     "files.associations": {
-        "*.tsx": "typescriptreact",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "string_view": "cpp",
+        "algorithm": "cpp",
+        "random": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "numeric": "cpp",
+        "functional": "cpp",
+        "bit": "cpp"
     }
 }

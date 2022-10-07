@@ -30,6 +30,7 @@ enum GAITTYPE
 
 enum MOVESTATE
 {
+    INIT,
     MOVING,
     STOPSTARTED,
     STOPPING,

@@ -67,17 +67,23 @@ Vec3 rotateAroundY(Vec3 point, float rad)
     return Vec3(point.mX * cosRad - sinRad * point.mZ, point.mY, point.mZ * cosRad + sinRad * point.mX);
 }
 
-uint16_t radToUs(float rad) {
-    return map(rad * RAD_TO_DEG, 0, 180, MIN_US, MAX_US);
+uint16_t radToUs(float rad, ServoUS servoUS) {
+    return map(rad * RAD_TO_DEG, 0, 180, servoUS.minUS, servoUS.maxUS);
 }
 
-uint16_t degToUs(uint16_t deg) {
+uint16_t degToUs(uint16_t deg, ServoUS servoUS) {
     if(deg > 180)
         deg = 180;
     else if (deg < 0)
         deg = 0;
         
-    return map(deg, 0, 180, MIN_US, MAX_US);
+    return map(deg, 0, 180, servoUS.minUS, servoUS.maxUS);
+}
+
+uint16_t degToPWM(uint16_t deg, ServoUS servoUS, uint16_t prescale) {
+    uint16_t us = degToUs(deg, servoUS);
+
+    return roundf(us / ((1000000.0 * (prescale + 1)) / (float)DRIVER_FREQ));
 }
 
 Vec2 degreesToJoyStickPos(float deg)
@@ -89,9 +95,9 @@ Vec2 degreesToJoyStickPos(float deg)
     return result;
 }
 
-float jyStkAngleToRad(uint8_t jyStkDeg) {
-    if(jyStkDeg == 0)
+float joyStickAngleToRad(uint8_t joyStickDeg) {
+    if(joyStickDeg == 0)
         return -1;
 
-    return ((jyStkDeg - 1) / 254.0) * M_PI * 2;
+    return ((joyStickDeg - 1) / 254.0) * M_PI * 2;
 }

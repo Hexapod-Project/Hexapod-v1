@@ -80,4 +80,17 @@ public:
     float mMatrix[4][4];
 };
 
+class ServoUS
+{
+public:
+    u_int minUS;
+    u_int maxUS;
+
+    ServoUS(u_int min, u_int max)
+    {
+        this->minUS = min;
+        this->maxUS = max;
+    }
+};
+
 #endif

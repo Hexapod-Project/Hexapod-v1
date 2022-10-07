@@ -1,4 +1,5 @@
 docs
 *.code-workspace
 output
+build
 .vscode

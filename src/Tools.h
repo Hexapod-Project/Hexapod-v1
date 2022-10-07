@@ -14,9 +14,10 @@ Vec2 normalizeJoystickPos(Vec2 pos);
 Vec3 rotateAroundY(Vec3 point, float rad);
 uint16_t radToPos(float rad);
 uint16_t degToPos(float deg);
-uint16_t radToUs(float rad);
-uint16_t degToUs(uint16_t deg);
+uint16_t radToUs(float rad, ServoUS pwm);
+uint16_t degToUs(uint16_t deg, ServoUS pwm);
+uint16_t degToPWM(uint16_t deg, ServoUS pwm, u_int16_t prescale);
 Vec2 degreesToJoyStickPos(float deg);
-float jyStkAngleToRad(uint8_t jyStkDeg);
+float joyStickAngleToRad(uint8_t jyStkDeg);
 
 #endif

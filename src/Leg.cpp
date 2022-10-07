@@ -8,9 +8,9 @@ extern HardwareSerial Serial;
 
 void Leg::setBase(Vec3 pos, float angle)
 {
-    mStartPos = pos;    
+    mStartPos = pos;
 
-    //90deg is middle of the servos max angle of rotation (which is the default angle of the leg)
+    // 90deg is middle of the servos max angle of rotation (which is the default angle of the leg)
     mStartAngle = angle;
 
     mBaseMatrix = mBaseMatrix.translate(pos).rotate(Vec3(0, -mStartAngle, 0));
@@ -21,7 +21,14 @@ void Leg::setRoot(Mat4 *matrix)
     mRootMatrix = matrix;
 }
 
-void Leg::attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PWMServoDriver* servoDriver)
+void Leg::setServos(uint8_t hip, uint8_t femur, uint8_t tibia)
+{
+    mHipServoId = hip - 1;
+    mFemurServoId = femur - 1;
+    mTibiaServoId = tibia - 1;
+}
+
+void Leg::attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PWMServoDriver *servoDriver)
 {
     mHipAngle = START_HIP_ANGLE;
     mFemurAngle = START_FEMUR_ANGLE;
@@ -32,7 +39,9 @@ void Leg::attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PW
     mTibiaPin = tibiaPin;
 
     mServoDriver = servoDriver;
-    
+
+    mDriverPrescale = mServoDriver->readPrescale();
+
     updateServoAngles();
 }
 
@@ -95,22 +104,51 @@ void Leg::calculateJointAngles()
 
 void Leg::updateServoAngles()
 {
+    checkInterpolationAngle(mHipAngle, mHipTargetAngle);
+    checkInterpolationAngle(mFemurAngle, mFemurTargetAngle);
+    checkInterpolationAngle(mTibiaAngle, mTibiaTargetAngle);
+
     setAngles(mHipAngle, mFemurAngle, mTibiaAngle);
+}
+
+void Leg::checkInterpolationAngle(float &angle, float &targetAngle)
+{
+    if (targetAngle >= 0)
+    {
+        if (fabs(targetAngle - angle) > 0.01)
+        {
+            angle += (targetAngle - angle) * LEG_INTERPOLATION;
+        }
+        else
+        {
+            angle = targetAngle;
+            targetAngle = -1;
+        }
+    }
+}
+
+void Leg::setInterpolatedAngles(float hipAngle, float femurAngle, float tibiaAngle)
+{
+    mHipTargetAngle = hipAngle;
+    mFemurTargetAngle = femurAngle;
+    mTibiaTargetAngle = tibiaAngle;
+
+    Serial.println(String(hipAngle) + ", " + String(femurAngle) + ", " + String(tibiaAngle));
 }
 
 void Leg::setAngles(float hipAngle, float femurAngle, float tibiaAngle)
 {
-    if(tibiaAngle > MAX_TIBIA_ANGLE)
+    if (tibiaAngle > MAX_TIBIA_ANGLE)
         tibiaAngle = MAX_TIBIA_ANGLE;
 
-    if(hipAngle > MAX_HIP_ANGLE)
+    if (hipAngle > MAX_HIP_ANGLE)
         hipAngle = MAX_HIP_ANGLE;
     else if (hipAngle < MIN_HIP_ANGLE)
-        hipAngle = MIN_HIP_ANGLE;
+        hipAngle = MIN_HIP_ANGLE;    
 
-    mServoDriver->writeMicroseconds(mHipPin, degToUs(hipAngle));
-    mServoDriver->writeMicroseconds(mFemurPin, degToUs(femurAngle));
-    mServoDriver->writeMicroseconds(mTibiaPin, degToUs(tibiaAngle));    
+    mServoDriver->setPWM(mHipPin, 0, degToPWM(hipAngle, SERVO_US[mHipServoId], mDriverPrescale));
+    mServoDriver->setPWM(mFemurPin, 0, degToPWM(femurAngle, SERVO_US[mFemurServoId], mDriverPrescale));
+    mServoDriver->setPWM(mTibiaPin, 0, degToPWM(tibiaAngle, SERVO_US[mTibiaServoId], mDriverPrescale));
 }
 
 void Leg::resetFootTargetPos()
@@ -128,6 +166,12 @@ Vec3 Leg::getStartFootPos()
     return mStartFootPos;
 }
 
-Vec3 Leg::getAngles() {
+Vec3 Leg::getAngles()
+{
     return Vec3(mHipAngle, mFemurAngle, mTibiaAngle);
+}
+
+bool Leg::isFinishedInterpolation()
+{
+    return mHipTargetAngle == -1 && mFemurTargetAngle == -1 && mTibiaTargetAngle == -1;
 }
