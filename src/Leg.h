@@ -29,19 +29,22 @@ private:
     float mFemurTargetAngle = -1;
     float mTibiaTargetAngle = -1;
 
-    uint8_t mHipServoId, mFemurServoId, mTibiaServoId;    
+    uint8_t mHipServoId, mFemurServoId, mTibiaServoId;  
+
+    bool isLeft = false;  
 
 public:
     void setBase(Vec3 pos, float angle);
     void setRoot(Mat4 *matrix);
+    void setIsLeft(bool isLeft = true);
     void setServos(uint8_t hip, uint8_t femur, uint8_t tibia);
     void attach(uint8_t hipPin, uint8_t femurPin, uint8_t tibiaPin, Adafruit_PWMServoDriver* servoDriver);
     void setStartFootPos(Vec3 startPos);
     void setTargetFootPos(Vec3 targetPos);
     void calculateJointAngles();
     void updateServoAngles();
-    void checkInterpolationAngle(float &angle, float &targetAngle);
-    void setInterpolatedAngles(float hipAngle, float femurAngle, float tibiaAngle);
+    void checkTargetAngle(float &angle, float &targetAngle);
+    void setTargetAngles(float hipAngle, float femurAngle, float tibiaAngle);
     void setAngles(float hipAngle, float femurAngle, float tibiaAngle);
     void resetFootTargetPos();
     Vec3 getTargetFootPos();

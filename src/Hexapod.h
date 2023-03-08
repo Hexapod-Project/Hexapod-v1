@@ -75,7 +75,8 @@ private:
     void initLegs();
     void setLegsPos();
     void initGaits();
-    void updateLegs();    
+    void updateLegServoAngles();  
+    void calculateLegJointAngles();  
     void calcMoveDir();
     void walk();
     void setNextStepRot();

@@ -51,7 +51,7 @@ const float Y_LEG_OFFSET = AXIS_HEIGHT / 2 - BODY_Y_OFFSET;
 // Leg Front Back Z offset
 const float Z_FB_LEG_OFFSET = sin(M_PI / 3) * 4.5;
 
-const uint8_t MAX_TIBIA_ANGLE = 90;
+const uint8_t MAX_TIBIA_ANGLE = 180;
 
 const uint8_t HIP_ANGLE_RANGE = 50;
 const uint8_t MAX_HIP_ANGLE = 90 + HIP_ANGLE_RANGE;
@@ -59,11 +59,11 @@ const uint8_t MIN_HIP_ANGLE = 90 - HIP_ANGLE_RANGE;
 
 const uint8_t START_HIP_ANGLE = 90;
 const uint8_t START_FEMUR_ANGLE = 180;
-const uint8_t START_TIBIA_ANGLE = MAX_TIBIA_ANGLE;
+const uint8_t START_TIBIA_ANGLE = 90;
 
 const float BODY_WIDTH = 8.5;
 // The distance of the foot is the radius of a circle and the body's center is the origin
-const float FOOT_DIST = BODY_WIDTH / 2 + HIP_LENGTH + FEMUR_LENGTH / 2.5;
+const float FOOT_DIST = 0; //+ HIP_LENGTH + FEMUR_LENGTH / 2.5;
 const float FOOT_Y = 0;
 
 // cos(LEG_ANGLE) * FOOT_DIST, 0, sin(LEG_ANGLE) * FOOT_DIST;

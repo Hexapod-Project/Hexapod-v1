@@ -21,6 +21,11 @@ void Leg::setRoot(Mat4 *matrix)
     mRootMatrix = matrix;
 }
 
+void Leg::setIsLeft(bool isLeft)
+{
+    this->isLeft = isLeft;
+}
+
 void Leg::setServos(uint8_t hip, uint8_t femur, uint8_t tibia)
 {
     mHipServoId = hip - 1;
@@ -81,37 +86,37 @@ void Leg::calculateJointAngles()
     float femurToTargetAngle = atan2(localTargetFootPos.mY, distXZ);
 
     float femurAcosVal = (distSqr + FEMURTIBIASQR_DIFF) / (dist * FEMUR_LENGTH_X2);
-    float femurAngle = acos(femurAcosVal) + femurToTargetAngle + M_PI_2;
+    float femurAngle = M_PI_2 + acos(femurAcosVal) + femurToTargetAngle;
 
     float tibiaAngle = 0;
     if (dist < LEG_LENGTH)
     {
         float tibiaAcosVal = (FEMURTIBIASQR_TOTAL - distSqr) / FEMURTIBIA_PRODUCT_X2;
-        tibiaAngle = M_PI - acos(tibiaAcosVal);
+        tibiaAngle =  acos(tibiaAcosVal);
     }
 
     hipAngle = M_PI_2 - hipAngle;
 
     if (!isnan(hipAngle))
-        mHipAngle = clampTo360Deg(hipAngle * RAD_TO_DEG);
+        mHipTargetAngle = clampTo360Deg(hipAngle * RAD_TO_DEG);
 
     if (!isnan(femurAngle))
-        mFemurAngle = clampTo360Deg(femurAngle * RAD_TO_DEG);
+        mFemurTargetAngle = clampTo360Deg(femurAngle * RAD_TO_DEG);
 
     if (!isnan(tibiaAngle))
-        mTibiaAngle = clampTo360Deg(tibiaAngle * RAD_TO_DEG);
+        mTibiaTargetAngle= clampTo360Deg(tibiaAngle * RAD_TO_DEG);
 }
 
 void Leg::updateServoAngles()
 {
-    checkInterpolationAngle(mHipAngle, mHipTargetAngle);
-    checkInterpolationAngle(mFemurAngle, mFemurTargetAngle);
-    checkInterpolationAngle(mTibiaAngle, mTibiaTargetAngle);
+    checkTargetAngle(mHipAngle, mHipTargetAngle);
+    checkTargetAngle(mFemurAngle, mFemurTargetAngle);
+    checkTargetAngle(mTibiaAngle, mTibiaTargetAngle);    
 
     setAngles(mHipAngle, mFemurAngle, mTibiaAngle);
 }
 
-void Leg::checkInterpolationAngle(float &angle, float &targetAngle)
+void Leg::checkTargetAngle(float &angle, float &targetAngle)
 {
     if (targetAngle >= 0)
     {
@@ -127,13 +132,11 @@ void Leg::checkInterpolationAngle(float &angle, float &targetAngle)
     }
 }
 
-void Leg::setInterpolatedAngles(float hipAngle, float femurAngle, float tibiaAngle)
+void Leg::setTargetAngles(float hipAngle, float femurAngle, float tibiaAngle)
 {
     mHipTargetAngle = hipAngle;
     mFemurTargetAngle = femurAngle;
-    mTibiaTargetAngle = tibiaAngle;
-
-    Serial.println(String(hipAngle) + ", " + String(femurAngle) + ", " + String(tibiaAngle));
+    mTibiaTargetAngle = tibiaAngle;    
 }
 
 void Leg::setAngles(float hipAngle, float femurAngle, float tibiaAngle)
@@ -144,7 +147,14 @@ void Leg::setAngles(float hipAngle, float femurAngle, float tibiaAngle)
     if (hipAngle > MAX_HIP_ANGLE)
         hipAngle = MAX_HIP_ANGLE;
     else if (hipAngle < MIN_HIP_ANGLE)
-        hipAngle = MIN_HIP_ANGLE;    
+        hipAngle = MIN_HIP_ANGLE;
+
+    if (!isLeft)
+    {
+        hipAngle = 180 - hipAngle;
+        femurAngle = 180 - femurAngle;
+        tibiaAngle = 180 - tibiaAngle;
+    }
 
     mServoDriver->setPWM(mHipPin, 0, degToPWM(hipAngle, SERVO_US[mHipServoId], mDriverPrescale));
     mServoDriver->setPWM(mFemurPin, 0, degToPWM(femurAngle, SERVO_US[mFemurServoId], mDriverPrescale));
