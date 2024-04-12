@@ -2,7 +2,7 @@
 
 The source code of a hexapod robot created with Arduino based libraries on a Esp32 Microcontroller. 
 
-It can be controlled using the app created with the <a href="https://github.com/edw-lee/HexapodControllerApp">Hexapod Controller App</a>.
+It can be controlled using the app created with the <a href="https://github.com/edw-lee/HexapodApp">Hexapod App</a>.
 
 The movement algorithm is based on the <a href="https://github.com/edw-lee/HexapodSimulator">Hexapod Simulator</a> with some modifications.
 
